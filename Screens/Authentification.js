@@ -1,15 +1,9 @@
-import { StatusBar } from "expo-status-bar";
 import { useRef, useState } from "react";
-import {
-  Button,
-  ImageBackground,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { Button, Text, TextInput, TouchableOpacity, View } from "react-native";
 import firebase from "../Config";
+import AuthContainer from "./AuthContainer"; // Importer AuthContainer
+import { fonts, layout, colors } from "../Styles/styles"; // Importer les styles communs
+
 const auth = firebase.auth();
 
 export default function Authentification(props) {
@@ -18,115 +12,73 @@ export default function Authentification(props) {
   const refinput2 = useRef();
 
   return (
-    <View style={styles.container}>
-      <StatusBar style="light" />
-      <View
-        style={{ height: 28, width: "100%", backgroundColor: "#800040" }}
-      ></View>
-      <ImageBackground
-        style={{
-          height: "100%",
-          width: "100%",
-          flex: 1,
-          justifyContent: "center",
-          alignItems: "center",
+    <AuthContainer>
+      {" "}
+      {/* Utiliser AuthContainer ici */}
+      <Text style={[fonts.title, { marginTop: 15 }, { marginBottom: 10 }]}>
+        Authentification
+      </Text>
+      <TextInput
+        onChangeText={(txt) => setEmail(txt)}
+        style={[fonts.input, { marginBottom: 10 , borderRadius: 10 }]} // Utiliser les styles pour l'input
+        placeholder="email"
+        keyboardType="email-address"
+        onSubmitEditing={() => {
+          refinput2.current.focus();
         }}
-        resizeMode="cover"
-        source={require("../assets/download.jpg")}
+        blurOnSubmit={false}
+      />
+      <TextInput
+        ref={refinput2}
+        onChangeText={(txt) => setPwd(txt)}
+        style={[fonts.input, { marginBottom: 20 , borderRadius: 10}]} // Utiliser les styles pour l'input
+        placeholder="password"
+        keyboardType="default"
+        secureTextEntry={true}
+      />
+      <TouchableOpacity
+        style={[layout.button, { backgroundColor: colors.buttonColor }]} // Custom button color
+        onPress={() => {
+          if (email !== "" && pwd !== "") {
+            auth
+              .signInWithEmailAndPassword(email, pwd)
+              .then(() => {
+                props.navigation.replace("Home");
+              })
+              .catch((error) => {
+                alert(error);
+              });
+          } else alert("error");
+        }}
       >
-        <View
+        <Text style={fonts.buttonText}>Sign in</Text>
+      </TouchableOpacity>
+      <View style={{ width: "100%", alignItems: "center", marginTop: 30, marginBottom: 20 }}>
+        <Text style={{ color: "white" }}>
+          Don't have an account yet?
+        </Text>
+        <TouchableOpacity
           style={{
-            borderRadius: 8,
-            backgroundColor: "#0005",
-            width: "85%",
-            height: 300,
-            justifyContent: "flex-start",
+            paddingRight: 10,
+            width: "100%",
             alignItems: "center",
+            marginTop: 5,
+          }}
+          onPress={() => {
+            props.navigation.navigate("NewUser");
           }}
         >
           <Text
             style={{
-              fontSize: 32,
               fontWeight: "bold",
               color: "white",
-              marginTop: 15,
+              textDecorationLine: "underline", // Sous-lignage du texte
             }}
           >
-            Authentification
+            Create new user
           </Text>
-          <TextInput
-            onChangeText={(txt) => setEmail(txt)}
-            style={styles.input}
-            placeholder="email"
-            keyboardType="email-address"
-            onSubmitEditing={() => {
-              refinput2.current.focus();
-            }}
-            blurOnSubmit={false}
-          ></TextInput>
-          <TextInput
-            ref={refinput2}
-            onChangeText={(txt) => setPwd(txt)}
-            style={styles.input}
-            placeholder="password"
-            keyboardType="default"
-            secureTextEntry={true}
-          ></TextInput>
-          <Button
-            title="Sign in"
-            onPress={() => {
-              if (email !== "" && pwd !== "") {
-                auth
-                  .signInWithEmailAndPassword(email, pwd)
-                  .then(() => {
-                    props.navigation.replace("Home");
-                  })
-                  .catch((error) => {
-                    alert(error);
-                  });
-              } else alert("error");
-            }}
-          >
-            Sign in
-          </Button>
-          <TouchableOpacity
-            style={{
-              paddingRight: 10,
-              width: "100%",
-              alignItems: "flex-end",
-            }}
-          >
-            <Text
-              style={{ fontWeight: "bold", color: "white" }}
-              onPress={() => {
-                props.navigation.navigate("NewUser");
-              }}
-            >
-              Create new user
-            </Text>
-          </TouchableOpacity>
-        </View>
-      </ImageBackground>
-    </View>
+        </TouchableOpacity>
+      </View>
+    </AuthContainer>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#f09",
-    alignItems: "center", // horizontal alignement
-    justifyContent: "flex-start", // vertical alignement
-  },
-  input: {
-    fontFamily: "serif",
-    fontSize: 16,
-    marginTop: 15,
-    padding: 10,
-    height: 60,
-    width: "90%",
-    borderRadius: 2.5,
-    textAlign: "center",
-    backgroundColor: "white",
-  },
-});
