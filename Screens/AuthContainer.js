@@ -6,7 +6,7 @@ import { colors, layout } from "../Styles/styles";
 export default function AuthContainer({ children }) {
   return (
     <View style={layout.container}>
-      <StatusBar style="light" backgroundColor="#34537B" />
+      <StatusBar style="light" />
       <ImageBackground
         style={{
           height: "100%",

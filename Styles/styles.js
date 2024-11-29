@@ -4,7 +4,7 @@ export const colors = {
   primaryBackground: "#0005",
   textColor: "white",
   inputBackground: "white",
-  buttonColor: "#809fff",
+  buttonColor: "#57acac",
 };
 
 export const fonts = {
@@ -16,7 +16,7 @@ export const fonts = {
   input: {
     fontSize: 16,
     padding: 10,
-    height: 60,
+    height: 50,
     width: "90%",
     borderRadius: 2.5,
     textAlign: "center",
@@ -37,12 +37,11 @@ export const layout = StyleSheet.create({
   },
   innerContainer: {
     borderRadius: 15,
-    backgroundColor: colors.primaryBackground,
+    backgroundColor: "rgba(0, 0, 0, 0.3)", // Semi-transparent black
     width: "85%",
-    height: "auto",
-    justifyContent: "flex-start",
     alignItems: "center",
-    padding: 10,  // Padding général de 20px tout autour du contenu
+    padding: 20, // Padding inside the box
+    marginVertical: 20, 
   },
   button: {
     backgroundColor: colors.buttonColor, // Blue color for button

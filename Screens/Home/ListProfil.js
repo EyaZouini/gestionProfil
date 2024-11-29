@@ -9,7 +9,7 @@ import {
   View,
   TouchableOpacity,
 } from "react-native";
-
+import { fonts, layout, colors } from "../../Styles/styles"; 
 import firebase from "../../Config";
 const database = firebase.database();
 const ref_tableProfils = database.ref("TableProfils");
@@ -63,29 +63,22 @@ export default function ListProfil(props) {
 
   return (
     <ImageBackground
-      source={require("../../assets/imgbleu.jpg")}
+    source={require("../../assets/background.png")}
       style={styles.container}
     >
       <StatusBar style="light" />
-      <Text style={styles.textstyle}>List profils</Text>
+      <Text style={[fonts.title, { marginTop: 60 }, { marginBottom: 20 }]}>List profils</Text>
       <FlatList
         data={data}
         keyExtractor={(item) => item.id} // Clé unique pour chaque profil
         renderItem={renderProfileItem} // Rendu personnalisé
-        style={{ backgroundColor: "#fff3", width: "95%" }}
+        style={{ width: "90%" }}
       />
     </ImageBackground>
   );
 }
 
 const styles = StyleSheet.create({
-  textstyle: {
-    fontSize: 40,
-    fontFamily: "serif",
-    color: "white",
-    fontWeight: "bold",
-    paddingTop: 45,
-  },
   container: {
     flex: 1,
     alignItems: "center",
@@ -94,15 +87,11 @@ const styles = StyleSheet.create({
   profileCard: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#fff",
+ 
     padding: 15,
     marginVertical: 8,
     borderRadius: 10,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 5, // Ombre sur Android
+    backgroundColor: "rgba(0, 0, 0, 0.3)",
   },
   profileImage: {
     width: 50,
@@ -117,14 +106,14 @@ const styles = StyleSheet.create({
   profilePseudo: {
     fontSize: 18,
     fontWeight: "bold",
-    color: "#333",
+    color: "#fff",
   },
   profileName: {
     fontSize: 14,
-    color: "#666",
+    color:"#cdcdcd",
   },
   chatButton: {
-    backgroundColor: "#007bff",
+    backgroundColor: colors.buttonColor,
     paddingVertical: 8,
     paddingHorizontal: 15,
     borderRadius: 8,
