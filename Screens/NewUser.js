@@ -1,56 +1,85 @@
 import React, { useState, useRef } from "react";
-import { Button, TextInput, Text, View, TouchableOpacity } from "react-native"; // Add View here
+import { Text, TextInput, View, TouchableOpacity } from "react-native";
 import firebase from "../Config";
-import AuthContainer from "./AuthContainer"; // Importer AuthContainer
-import { fonts, layout } from "../Styles/styles"; // Importer les styles communs
+import AuthContainer from "./AuthContainer";
+import { fonts, layout, colors } from "../Styles/styles";
 
 const auth = firebase.auth();
 const database = firebase.database();
 
-export default function NewUser(props) {
+export default function NewUser({ navigation }) {
   const [email, setEmail] = useState("");
   const [pwd, setPwd] = useState("");
   const [confirmPwd, setConfirmPwd] = useState("");
-  const refinput2 = useRef();
-  const refinput3 = useRef();
+  const refInput2 = useRef();
+  const refInput3 = useRef();
+
+  const handleRegister = () => {
+    if (pwd !== confirmPwd) {
+      alert("Les mots de passe ne correspondent pas.");
+    } else {
+      auth
+        .createUserWithEmailAndPassword(email, pwd)
+        .then(() => {
+          const currentId = auth.currentUser?.uid;
+          if (currentId) {
+            const refTableProfils = database.ref("TableProfils");
+            refTableProfils.child(currentId).set({
+              id: currentId,
+              email,
+              nom: "", // Champs supplémentaires à compléter
+              pseudo: "",
+            });
+            navigation.replace("Home", { currentId });
+          } else {
+            alert("Erreur : L'identifiant de l'utilisateur est introuvable.");
+          }
+        })
+        .catch((error) => alert(error.message));
+    }
+  };
 
   return (
     <AuthContainer>
-      {" "}
-      {/* Use AuthContainer for layout and background */}
       <Text style={[fonts.title, { marginTop: 15, marginBottom: 10 }]}>
-        Register
+        Inscription
       </Text>
+
       <TextInput
-        onChangeText={(txt) => setEmail(txt)}
+        value={email}
+        onChangeText={setEmail}
         style={[fonts.input, { marginBottom: 10, borderRadius: 10 }]}
-        placeholder="email"
+        placeholder="Email"
+        placeholderTextColor={colors.placeholderColor}
         keyboardType="email-address"
-        onSubmitEditing={() => {
-          refinput2.current.focus();
-        }}
+        onSubmitEditing={() => refInput2.current.focus()}
         blurOnSubmit={false}
       />
+
       <TextInput
-        ref={refinput2}
-        onChangeText={(txt) => setPwd(txt)}
+        ref={refInput2}
+        value={pwd}
+        onChangeText={setPwd}
         style={[fonts.input, { marginBottom: 10, borderRadius: 10 }]}
-        placeholder="password"
+        placeholder="Mot de passe"
+        placeholderTextColor={colors.placeholderColor}
         keyboardType="default"
-        secureTextEntry={true}
-        onSubmitEditing={() => {
-          refinput3.current.focus();
-        }}
+        secureTextEntry
+        onSubmitEditing={() => refInput3.current.focus()}
         blurOnSubmit={false}
       />
+
       <TextInput
-        ref={refinput3}
-        onChangeText={(txt) => setConfirmPwd(txt)}
+        ref={refInput3}
+        value={confirmPwd}
+        onChangeText={setConfirmPwd}
         style={[fonts.input, { marginBottom: 10, borderRadius: 10 }]}
-        placeholder="confirm password"
+        placeholder="Confirmer le mot de passe"
+        placeholderTextColor={colors.placeholderColor}
         keyboardType="default"
-        secureTextEntry={true}
+        secureTextEntry
       />
+
       <View
         style={{
           marginTop: 10,
@@ -59,41 +88,15 @@ export default function NewUser(props) {
           gap: 15,
         }}
       >
-        <TouchableOpacity
-          style={layout.button} // Green color for the "Register" button
-          onPress={() => {
-            if (pwd !== confirmPwd) {
-              alert("Passwords do not match");
-            } else {
-              auth
-                .createUserWithEmailAndPassword(email, pwd)
-                .then(() => {
-                  const currentId = auth.currentUser.uid;
-                  const ref_tableProfils = database.ref("TableProfils");
-                  ref_tableProfils.child(currentId).set({
-                    id: currentId,
-                    email: email,
-                    nom: "", // Vous pouvez demander à l'utilisateur
-                    pseudo: "", // Ou inclure un champ pour cela
-                  });
-                  props.navigation.replace("Home", { currentId: currentId });
-                })
-                .catch((error) => {
-                  alert(error);
-                });
-            }
-          }}
-        >
-          <Text style={fonts.buttonText}>Register</Text>
+        <TouchableOpacity style={layout.button} onPress={handleRegister}>
+          <Text style={fonts.buttonText}>S'inscrire</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[layout.button, { backgroundColor: "#f07578" }]} // Red color for the "Back" button
-          onPress={() => {
-            props.navigation.goBack();
-          }}
+          style={[layout.button, { backgroundColor: "#f07578" }]}
+          onPress={() => navigation.goBack()}
         >
-          <Text style={fonts.buttonText}>Back</Text>
+          <Text style={fonts.buttonText}>Retour</Text>
         </TouchableOpacity>
       </View>
     </AuthContainer>

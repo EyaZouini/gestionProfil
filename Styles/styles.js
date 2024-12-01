@@ -45,11 +45,11 @@ export const layout = StyleSheet.create({
   },
   button: {
     backgroundColor: colors.buttonColor, // Blue color for button
-    paddingVertical: 15,  // Increase vertical padding for a larger button
-    paddingHorizontal: 30, // Horizontal padding for width
+    paddingVertical: 14,  // Increase vertical padding for a larger button
+    paddingHorizontal: 29, // Horizontal padding for width
     borderRadius: 10, // Border radius for rounded corners
     alignItems: "center",
     justifyContent: "center",
-    width: "40%",
+    width: "42.5%",
   },
 });
