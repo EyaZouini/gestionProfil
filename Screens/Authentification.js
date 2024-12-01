@@ -43,7 +43,13 @@ export default function Authentification(props) {
             auth
               .signInWithEmailAndPassword(email, pwd)
               .then(() => {
-                props.navigation.replace("Home");
+                const currentId = auth.currentUser.uid;
+                if (currentId) {
+                  props.navigation.replace("Home", { currentId });
+                } else {
+                  console.error("L'ID utilisateur est introuvable !");
+                  alert("Erreur : L'identifiant de l'utilisateur est introuvable.");
+                }
               })
               .catch((error) => {
                 alert(error);

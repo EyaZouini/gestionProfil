@@ -8,7 +8,8 @@ import { MaterialCommunityIcons } from "react-native-vector-icons"; // Importer 
 
 const Tab = createMaterialBottomTabNavigator();
 
-export default function Home() {
+export default function Home(props) {
+  const currentId= props.route.params.currentId;
   return (
     <Tab.Navigator
       barStyle={{
@@ -23,6 +24,7 @@ export default function Home() {
       <Tab.Screen
         name="ListProfil"
         component={ListProfil}
+        initialParams={{currentId:currentId}}
         options={{
           tabBarLabel: "Profils", // Label de l'onglet
           tabBarIcon: ({ color }) => (
@@ -51,6 +53,7 @@ export default function Home() {
       <Tab.Screen
         name="MyProfil"
         component={MyProfil}
+        initialParams={{currentId:currentId}}
         options={{
           tabBarLabel: "Mon Profil", // Label de l'onglet
           tabBarIcon: ({ color }) => (

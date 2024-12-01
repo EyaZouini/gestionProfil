@@ -12,6 +12,7 @@
     "@react-navigation/material-bottom-tabs": "^6.2.29",
     "@react-navigation/native": "^6.1.18",
     "@react-navigation/native-stack": "^6.11.0",
+    "@supabase/supabase-js": "^2.46.2",
     "expo": "^52.0.6",
     "expo-image-picker": "^16.0.3",
     "expo-status-bar": "~2.0.0",
