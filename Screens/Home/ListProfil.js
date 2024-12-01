@@ -9,69 +9,58 @@ import {
   View,
   TouchableOpacity,
 } from "react-native";
-import { fonts, layout, colors } from "../../Styles/styles";
+import { fonts, colors } from "../../Styles/styles";
 import firebase from "../../Config";
 
 const database = firebase.database();
 const ref_tableProfils = database.ref("TableProfils");
 
-export default function ListProfil(props) {
-  const [data, setData] = useState([]);
-  const currentId = props.route.params.currentId; // Vérifiez l'orthographe ici
+export default function ListProfil({ route, navigation }) {
+  const [profiles, setProfiles] = useState([]);
   const [currentUser, setCurrentUser] = useState(null);
+  const { currentId } = route.params;
 
-  // Récupérer les données
+  // Récupération des profils et de l'utilisateur actuel
   useEffect(() => {
-    ref_tableProfils.on("value", (snapshot) => {
-      const d = [];
-      snapshot.forEach((unProfil) => {
-        const profil = unProfil.val();
-        if (profil.id === currentId) {
-          // Définir l'utilisateur actuel
-          setCurrentUser(profil);
+    const listener = ref_tableProfils.on("value", (snapshot) => {
+      const fetchedProfiles = [];
+      snapshot.forEach((childSnapshot) => {
+        const profile = childSnapshot.val();
+        if (profile.id === currentId) {
+          setCurrentUser(profile); // Définir l'utilisateur actuel
         } else {
-          // Ajouter les autres utilisateurs à la liste
-          d.push(profil);
+          fetchedProfiles.push(profile); // Ajouter les autres utilisateurs
         }
       });
-      setData(d); // Met à jour l'état avec les données des autres utilisateurs
+      setProfiles(fetchedProfiles); // Mettre à jour les profils
     });
 
-    // Nettoyer l'écouteur lors du démontage du composant
-    return () => {
-      ref_tableProfils.off();
-    };
-  }, [currentId]); // Ajoutez `currentId` comme dépendance
+    // Nettoyage de l'écouteur Firebase
+    return () => ref_tableProfils.off("value", listener);
+  }, [currentId]);
 
-  // Fonction pour chaque vue
+  // Composant de rendu pour chaque profil
   const renderProfileItem = ({ item }) => (
     <View style={styles.profileCard}>
-      {/* Image de profil à gauche */}
       <Image
         source={
           item.uriImage
-            ? { uri: item.uriImage } // Utilise l'URL de l'image si disponible
-            : require("../../assets/profil.png") // Sinon, affiche l'icône par défaut
+            ? { uri: item.uriImage }
+            : require("../../assets/profil.png")
         }
         style={styles.profileImage}
       />
-
-      {/* Pseudo et nom */}
       <View style={styles.profileInfo}>
         <Text style={styles.profilePseudo}>
           {item.pseudo || "Pseudo indisponible"}
         </Text>
-        <Text style={styles.profileName}>
-          {item.nom || "Nom indisponible"}
-        </Text>
+        <Text style={styles.profileName}>{item.nom || "Nom indisponible"}</Text>
       </View>
-
-      {/* Bouton pour accéder au chat */}
       <TouchableOpacity
         style={styles.chatButton}
         onPress={() =>
-          props.navigation.navigate("Chat", {
-            currentUser: currentUser,
+          navigation.navigate("Chat", {
+            currentUser,
             secondUser: item,
           })
         }
@@ -87,14 +76,12 @@ export default function ListProfil(props) {
       style={styles.container}
     >
       <StatusBar style="light" />
-      <Text style={[fonts.title, { marginTop: 60 }, { marginBottom: 20 }]}>
-        List profils
-      </Text>
+      <Text style={[fonts.title, styles.title]}>List profils</Text>
       <FlatList
-        data={data}
-        keyExtractor={(item) => item.id} // Clé unique pour chaque profil
-        renderItem={renderProfileItem} // Rendu personnalisé
-        style={{ width: "90%" }}
+        data={profiles}
+        keyExtractor={(item) => item.id}
+        renderItem={renderProfileItem}
+        style={styles.list}
       />
     </ImageBackground>
   );
@@ -105,6 +92,13 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     justifyContent: "flex-start",
+  },
+  title: {
+    marginTop: 60,
+    marginBottom: 20,
+  },
+  list: {
+    width: "90%",
   },
   profileCard: {
     flexDirection: "row",

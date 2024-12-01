@@ -24,7 +24,8 @@ export default function MyProfil(props) {
   const [telephone, setTelephone] = useState("");
   const [uriImage, seturiImage] = useState("");
   const [isDefaultImage, setisDefaultImage] = useState(true);
-  const [isModified, setIsModified] = useState(false); // Suivi de la modification
+  const [isModified, setIsModified] = useState(false); 
+  const [imageModified, setimageModified] = useState(false)
 
   // Create refs for each TextInput
   const pseudoInputRef = useRef(null);
@@ -88,8 +89,7 @@ export default function MyProfil(props) {
   
     return data.publicUrl; // Retourne l'URL publique
   };
-  
-  
+
   // Function to pick an image from the user's device
   const pickImage = async () => {
     let permissionResult =
@@ -110,6 +110,7 @@ export default function MyProfil(props) {
       seturiImage(pickerResult.assets[0].uri);
       setisDefaultImage(false); // Set default image flag to false
       setIsModified(true); // Marquer comme modifié
+      setimageModified(true);
     }
   };
 
@@ -117,11 +118,13 @@ export default function MyProfil(props) {
     try {
       let imageUrl = "";
 
-      // Upload the image to Supabase if a new image is picked
-      if (!isDefaultImage) {
+      // Upload the image to Supabase only if it's modified
+      if (imageModified) {
         console.log("Uploading image to Supabase...");
         imageUrl = await uploadImageToSupaBase();
         console.log("Image uploaded. Public URL:", imageUrl);
+      } else {
+        imageUrl = uriImage; // If no new image is picked, keep the old one
       }
 
       // Update Firebase with the new profile data, including the image URL
@@ -132,11 +135,12 @@ export default function MyProfil(props) {
         nom,
         pseudo,
         telephone,
-        uriImage: imageUrl || uriImage, // Use existing image URL if no new image
+        uriImage: imageUrl, // Use existing image URL if no new image
       });
 
       console.log("Profil mis à jour avec succès.");
-      setIsModified(false); // Réinitialiser l'état après la sauvegarde
+      setIsModified(false); 
+      setimageModified(false)
     } catch (error) {
       console.error(
         "Erreur lors de la mise à jour du profil : ",

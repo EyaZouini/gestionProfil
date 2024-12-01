@@ -6,6 +6,7 @@ import {
   FlatList,
   TextInput,
   TouchableHighlight,
+  Image,
 } from "react-native";
 import React, { useState, useEffect } from "react";
 import { fonts, layout, colors } from "../Styles/styles";
@@ -69,27 +70,52 @@ export default function Chat(props) {
         <FlatList
           style={styles.messagesContainer}
           data={data}
-          renderItem={({ item }) => {
+          renderItem={({ item, index }) => {
             const isCurrentUser = item.sender === currentUser.id;
             const color = isCurrentUser ? "#FFF" : "#444"; // Fond sombre
             const textColor = isCurrentUser ? colors.buttonColor : "#fff"; // Texte clair pour l'utilisateur courant
 
+            // Détermine l'image de profil selon l'expéditeur
+            const profileImage =
+              isCurrentUser
+                ? currentUser.uriImage // Image de l'utilisateur courant
+                : secondUser.uriImage; // Image de l'autre utilisateur
+
+            // Vérifier si le message précédent est du même utilisateur
+            const showProfileImage =
+              index === 0 || item.sender !== data[index - 1].sender;
+
             return (
               <View
                 style={[
-                  styles.message,
-                  { 
-                    backgroundColor: color,
-                    marginLeft: isCurrentUser ? "auto" : 0, // Décalage à droite pour les messages envoyés
-                    marginRight: isCurrentUser ? 0 : "auto", // Décalage à gauche pour les messages reçus
+                  styles.messageContainer,
+                  {
+                    // Aligner le message de l'utilisateur courant à gauche, celui de l'autre à droite
+                    flexDirection: isCurrentUser ? "row-reverse" : "row",
                   },
                 ]}
               >
-                <View style={styles.messageContent}>
-                  <Text style={[styles.messageText, { color: textColor }]}>
-                    {item.body}
-                  </Text>
-                  <Text style={styles.messageTime}>{item.time}</Text>
+                {showProfileImage && profileImage ? (
+                  <Image
+                    source={{ uri: profileImage }}
+                    style={styles.profileImage}
+                  />
+                ) : (
+                  // Si pas d'image, afficher un espace vide
+                  <View style={styles.profileImage} />
+                )}
+                <View
+                  style={[
+                    styles.message,
+                    { backgroundColor: color },
+                  ]}
+                >
+                  <View style={styles.messageContent}>
+                    <Text style={[styles.messageText, { color: textColor }]}>
+                      {item.body}
+                    </Text>
+                    <Text style={styles.messageTime}>{item.time}</Text>
+                  </View>
                 </View>
               </View>
             );
@@ -99,7 +125,7 @@ export default function Chat(props) {
         <View style={styles.inputContainer}>
           <TextInput
             onChangeText={(text) => setMsg(text)}
-            value={Msg}  // Ajoutez ceci pour lier le TextInput à l'état
+            value={Msg}
             placeholderTextColor="#ccc"
             placeholder="Write a message"
             style={styles.textinput}
@@ -139,13 +165,18 @@ const styles = StyleSheet.create({
     width: "95%",
     borderRadius: 10,
     marginVertical: 20,
-    padding: 10,
+    padding: 5,
+    paddingTop : 20
+  },
+  messageContainer: {
+    flexDirection: "row", // Aligner les images et messages
+    marginBottom: 10,
   },
   message: {
     padding: 10,
-    marginVertical: 5,
+    marginVertical: 0,
     borderRadius: 8,
-    maxWidth: "80%", // Limite la largeur des messages pour une meilleure lisibilité
+    maxWidth: "80%", // Limite la largeur des messages
   },
   messageContent: {
     flexDirection: "column",
@@ -158,6 +189,14 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: "#aaa",
     marginTop: 5,
+  },
+  profileImage: {
+    width: 40,
+    height: 40,
+    borderRadius: 50,
+    marginRight: 5,
+    marginLeft: 5, // Espacement entre l'image et le message
+    marginTop: 5, // Aligner verticalement
   },
   inputContainer: {
     flexDirection: "row",
