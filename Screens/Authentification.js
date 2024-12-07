@@ -18,7 +18,19 @@ export default function Authentification({ navigation }) {
         .then(() => {
           const currentId = auth.currentUser?.uid;
           if (currentId) {
-            navigation.replace("Home", { currentId });
+            // Mettre à jour l'attribut isConnected dans la base de données
+            const ref_tableProfils = firebase.database().ref("TableProfils").child(currentId);
+            ref_tableProfils
+              .update({ isConnected: true })
+              .then(() => {
+                console.log("isConnected mis à jour avec succès.");
+                // Rediriger vers la page Home après mise à jour
+                navigation.replace("Home", { currentId });
+              })
+              .catch((error) => {
+                console.error("Erreur lors de la mise à jour de isConnected :", error);
+                alert("Erreur : Impossible de mettre à jour l'état de connexion.");
+              });
           } else {
             console.error("L'ID utilisateur est introuvable !");
             alert("Erreur : L'identifiant de l'utilisateur est introuvable.");
@@ -29,6 +41,7 @@ export default function Authentification({ navigation }) {
       alert("Veuillez remplir tous les champs.");
     }
   };
+  
 
   return (
     <AuthContainer>

@@ -42,6 +42,13 @@ export default function ListProfil({ route, navigation }) {
   // Composant de rendu pour chaque profil
   const renderProfileItem = ({ item }) => (
     <View style={styles.profileCard}>
+      {/* Affichage du cercle de connexion à gauche de la photo */}
+      <View
+        style={[
+          styles.connectionStatus,
+          { backgroundColor: item.isConnected ? "green" : "red" }, // Vert si connecté, rouge si non
+        ]}
+      ></View>
       <Image
         source={
           item.uriImage
@@ -107,6 +114,12 @@ const styles = StyleSheet.create({
     marginVertical: 8,
     borderRadius: 10,
     backgroundColor: "rgba(0, 0, 0, 0.3)",
+  },
+  connectionStatus: {
+    width: 15,
+    height: 15,
+    borderRadius: 50,
+    marginRight: 10,  // Décalage pour que le cercle soit juste à côté de l'image
   },
   profileImage: {
     width: 50,
