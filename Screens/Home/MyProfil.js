@@ -42,10 +42,16 @@ export default function MyProfil(props) {
         setTelephone(profileData.telephone || "");
         seturiImage(profileData.uriImage || "");
         setisDefaultImage(profileData.uriImage ? false : true);
+  
+        // If profile is incomplete, show alert or redirect
+        if (!profileData.nom || !profileData.pseudo || !profileData.telephone) {
+          alert("Veuillez compléter votre profil avant de continuer.");
+        }
       }
     });
   }, [currentId]);
-
+  
+  
   // Compare les données pour détecter des modifications
   const handleInputChange = (field, value) => {
     switch (field) {
@@ -141,6 +147,7 @@ export default function MyProfil(props) {
       console.log("Profil mis à jour avec succès.");
       setIsModified(false); 
       setimageModified(false)
+
     } catch (error) {
       console.error(
         "Erreur lors de la mise à jour du profil : ",

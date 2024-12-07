@@ -30,7 +30,7 @@ export default function NewUser({ navigation }) {
               nom: "", // Champs supplémentaires à compléter
               pseudo: "",
             });
-            navigation.replace("Home", { currentId });
+            navigation.replace("Home", { currentId, screen: "MyProfil" });
           } else {
             alert("Erreur : L'identifiant de l'utilisateur est introuvable.");
           }
