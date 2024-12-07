@@ -15,6 +15,8 @@ import firebase from "../../Config";
 const database = firebase.database();
 const ref_tableProfils = database.ref("TableProfils");
 
+import { Ionicons } from "react-native-vector-icons"; 
+
 export default function ListProfil({ route, navigation }) {
   const [profiles, setProfiles] = useState([]);
   const [currentUser, setCurrentUser] = useState(null);
@@ -44,17 +46,10 @@ export default function ListProfil({ route, navigation }) {
     <View style={styles.profileCard}>
       {/* Affichage du cercle de connexion à gauche de la photo */}
       <View
-        style={[
-          styles.connectionStatus,
-          { backgroundColor: item.isConnected ? "green" : "red" }, // Vert si connecté, rouge si non
-        ]}
+        style={[styles.connectionStatus, { backgroundColor: item.isConnected ? colors.buttonColor : "#81010b" }]}
       ></View>
       <Image
-        source={
-          item.uriImage
-            ? { uri: item.uriImage }
-            : require("../../assets/profil.png")
-        }
+        source={item.uriImage ? { uri: item.uriImage } : require("../../assets/profil.png")}
         style={styles.profileImage}
       />
       <View style={styles.profileInfo}>
@@ -63,25 +58,35 @@ export default function ListProfil({ route, navigation }) {
         </Text>
         <Text style={styles.profileName}>{item.nom || "Nom indisponible"}</Text>
       </View>
-      <TouchableOpacity
-        style={styles.chatButton}
-        onPress={() =>
-          navigation.navigate("Chat", {
-            currentUser,
-            secondUser: item,
-          })
-        }
-      >
-        <Text style={styles.chatButtonText}>Chat</Text>
-      </TouchableOpacity>
+      <View style={styles.buttonsContainer}>
+        {/* Chat Button */}
+        <TouchableOpacity
+          style={styles.chatButton}
+          onPress={() =>
+            navigation.navigate("Chat", {
+              currentUser,
+              secondUser: item,
+            })
+          }
+        >
+          <Ionicons name="chatbubble-ellipses" size={25} color="#fff" />
+        </TouchableOpacity>
+        
+        {/* Call Button */}
+        <TouchableOpacity
+          style={styles.callButton}
+          onPress={() => {
+            // Action pour appeler (pour le moment, ça ne fait rien)
+          }}
+        >
+          <Ionicons name="call" size={25} color="#fff" />
+        </TouchableOpacity>
+      </View>
     </View>
   );
 
   return (
-    <ImageBackground
-      source={require("../../assets/background.png")}
-      style={styles.container}
-    >
+    <ImageBackground source={require("../../assets/background.png")} style={styles.container}>
       <StatusBar style="light" />
       <Text style={[fonts.title, styles.title]}>List profils</Text>
       <FlatList
@@ -119,7 +124,7 @@ const styles = StyleSheet.create({
     width: 15,
     height: 15,
     borderRadius: 50,
-    marginRight: 10,  // Décalage pour que le cercle soit juste à côté de l'image
+    marginRight: 10,
   },
   profileImage: {
     width: 50,
@@ -140,14 +145,19 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#cdcdcd",
   },
-  chatButton: {
-    backgroundColor: colors.buttonColor,
-    paddingVertical: 8,
-    paddingHorizontal: 15,
-    borderRadius: 8,
+  buttonsContainer: {
+    flexDirection: "row",
+    alignItems: "center",
   },
-  chatButtonText: {
-    color: "#fff",
-    fontWeight: "bold",
+  chatButton: {
+    padding: 5,
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 5, 
+  },
+  callButton: {
+    padding: 5,
+    justifyContent: "center",
+    alignItems: "center",
   },
 });
