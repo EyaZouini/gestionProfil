@@ -24,24 +24,35 @@ export default function Chat(props) {
       ? currentUser.id + secondUser.id
       : secondUser.id + currentUser.id;
   const ref_unediscussion = ref_lesdiscussions.child(iddisc);
+  const ref_currentIsTyping = ref_unediscussion.child(
+    `${currentUser.id}isTyping`
+  );
+  const ref_secondIsTyping = ref_unediscussion.child(
+    `${secondUser.id}isTyping`
+  );
+  const [isSecondUserTyping, setIsSecondUserTyping] = useState(false);
 
   const [Msg, setMsg] = useState("");
   const [data, setdata] = useState([]);
 
-  // Récupérer les données des messages
   useEffect(() => {
     ref_unediscussion.on("value", (snapshot) => {
       let d = [];
-      snapshot.forEach((unmessage) => {
-        d.push(unmessage.val());
+      snapshot.forEach((childSnapshot) => {
+        const message = childSnapshot.val();
+  
+        if (message.body && message.sender && message.receiver && message.time) {
+          d.push(message);
+        }
       });
       setdata(d);
     });
-
+  
     return () => {
       ref_unediscussion.off();
     };
   }, []);
+  
 
   const handleSend = () => {
     const key = ref_unediscussion.push().key;
@@ -53,9 +64,21 @@ export default function Chat(props) {
       receiver: secondUser.id,
     });
 
-    // Réinitialiser le champ de saisie après l'envoi
     setMsg("");
   };
+
+  useEffect(() => {
+    const secondUserTypingListener = ref_secondIsTyping.on(
+      "value",
+      (snapshot) => {
+        setIsSecondUserTyping(snapshot.val() || false);
+      }
+    );
+
+    return () => {
+      ref_secondIsTyping.off("value", secondUserTypingListener);
+    };
+  }, []);
 
   return (
     <View style={styles.mainContainer}>
@@ -72,16 +95,13 @@ export default function Chat(props) {
           data={data}
           renderItem={({ item, index }) => {
             const isCurrentUser = item.sender === currentUser.id;
-            const color = isCurrentUser ? "#FFF" : "#444"; // Fond sombre
-            const textColor = isCurrentUser ? colors.buttonColor : "#fff"; // Texte clair pour l'utilisateur courant
+            const color = isCurrentUser ? "#FFF" : "#444";
+            const textColor = isCurrentUser ? colors.buttonColor : "#fff";
 
-            // Détermine l'image de profil selon l'expéditeur
-            const profileImage =
-              isCurrentUser
-                ? currentUser.uriImage // Image de l'utilisateur courant
-                : secondUser.uriImage; // Image de l'autre utilisateur
+            const profileImage = isCurrentUser
+              ? currentUser.uriImage
+              : secondUser.uriImage;
 
-            // Vérifier si le message précédent est du même utilisateur
             const showProfileImage =
               index === 0 || item.sender !== data[index - 1].sender;
 
@@ -90,7 +110,6 @@ export default function Chat(props) {
                 style={[
                   styles.messageContainer,
                   {
-                    // Aligner le message de l'utilisateur courant à gauche, celui de l'autre à droite
                     flexDirection: isCurrentUser ? "row-reverse" : "row",
                   },
                 ]}
@@ -101,15 +120,9 @@ export default function Chat(props) {
                     style={styles.profileImage}
                   />
                 ) : (
-                  // Si pas d'image, afficher un espace vide
                   <View style={styles.profileImage} />
                 )}
-                <View
-                  style={[
-                    styles.message,
-                    { backgroundColor: color },
-                  ]}
-                >
+                <View style={[styles.message, { backgroundColor: color }]}>
                   <View style={styles.messageContent}>
                     <Text style={[styles.messageText, { color: textColor }]}>
                       {item.body}
@@ -119,12 +132,21 @@ export default function Chat(props) {
                 </View>
               </View>
             );
-          }}
+          }} ListFooterComponent={
+            isSecondUserTyping && (
+              <Text style={styles.typingIndicator}>
+                {secondUser.nom} is typing...
+              </Text>
+            )
+          }
         />
+        
 
         <View style={styles.inputContainer}>
           <TextInput
             onChangeText={(text) => setMsg(text)}
+            onFocus={() => ref_currentIsTyping.set(true)}
+            onBlur={() => ref_currentIsTyping.set(false)}
             value={Msg}
             placeholderTextColor="#ccc"
             placeholder="Write a message"
@@ -160,23 +182,29 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "#ffffff",
   },
+  typingIndicator: {
+    fontSize: 14,
+    color: "#ccc",
+    fontStyle: "italic",
+    marginBottom: 10,
+  },
   messagesContainer: {
-    backgroundColor: "rgba(0, 0, 0, 0.4)", // Fond sombre pour la zone des messages
+    backgroundColor: "rgba(0, 0, 0, 0.4)",
     width: "95%",
     borderRadius: 10,
     marginVertical: 20,
     padding: 5,
-    paddingTop : 20
+    paddingTop: 20,
   },
   messageContainer: {
-    flexDirection: "row", // Aligner les images et messages
+    flexDirection: "row",
     marginBottom: 10,
   },
   message: {
     padding: 10,
     marginVertical: 0,
     borderRadius: 8,
-    maxWidth: "80%", // Limite la largeur des messages
+    maxWidth: "80%",
   },
   messageContent: {
     flexDirection: "column",
@@ -195,8 +223,8 @@ const styles = StyleSheet.create({
     height: 40,
     borderRadius: 50,
     marginRight: 5,
-    marginLeft: 5, // Espacement entre l'image et le message
-    marginTop: 5, // Aligner verticalement
+    marginLeft: 5,
+    marginTop: 5,
   },
   inputContainer: {
     flexDirection: "row",
@@ -206,7 +234,7 @@ const styles = StyleSheet.create({
   },
   textinput: {
     flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.4)", // Fond sombre pour l'input
+    backgroundColor: "rgba(0, 0, 0, 0.4)",
     color: "#fff",
     height: 50,
     fontSize: 15,
@@ -218,7 +246,7 @@ const styles = StyleSheet.create({
   sendButton: {
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: colors.buttonColor, // Bleu plus doux pour le bouton
+    backgroundColor: colors.buttonColor,
     borderRadius: 10,
     height: 50,
     width: "30%",
