@@ -13,35 +13,11 @@ export default function Authentification({ navigation }) {
 
   const handleSignIn = () => {
     if (email !== "" && pwd !== "") {
-      auth
-        .signInWithEmailAndPassword(email, pwd)
-        .then(() => {
-          const currentId = auth.currentUser?.uid;
-          if (currentId) {
-            // Mettre à jour l'attribut isConnected dans la base de données
-            const ref_tableProfils = firebase.database().ref("TableProfils").child(currentId);
-            ref_tableProfils
-              .update({ isConnected: true })
-              .then(() => {
-                console.log("isConnected mis à jour avec succès.");
-                // Rediriger vers la page Home après mise à jour
-                navigation.replace("Home", { currentId });
-              })
-              .catch((error) => {
-                console.error("Erreur lors de la mise à jour de isConnected :", error);
-                alert("Erreur : Impossible de mettre à jour l'état de connexion.");
-              });
-          } else {
-            console.error("L'ID utilisateur est introuvable !");
-            alert("Erreur : L'identifiant de l'utilisateur est introuvable.");
-          }
-        })
-        .catch((error) => alert(error.message));
+      auth.signInWithEmailAndPassword(email, pwd).catch((error) => alert(error.message));
     } else {
       alert("Veuillez remplir tous les champs.");
     }
   };
-  
 
   return (
     <AuthContainer>
@@ -72,7 +48,7 @@ export default function Authentification({ navigation }) {
       />
 
       <TouchableOpacity
-        style={[layout.button, { backgroundColor: colors.buttonColor , width: "50%" }]}
+        style={[layout.button, { backgroundColor: colors.buttonColor, width: "50%" }]}
         onPress={handleSignIn}
       >
         <Text style={fonts.buttonText}>Se connecter</Text>
@@ -80,10 +56,7 @@ export default function Authentification({ navigation }) {
 
       <View style={{ width: "100%", alignItems: "center", marginTop: 30, marginBottom: 20 }}>
         <Text style={{ color: colors.textColor }}>Pas encore de compte ?</Text>
-        <TouchableOpacity
-          style={{ marginTop: 5 }}
-          onPress={() => navigation.navigate("NewUser")}
-        >
+        <TouchableOpacity style={{ marginTop: 5 }} onPress={() => navigation.navigate("NewUser")}>
           <Text
             style={{
               fontWeight: "bold",
