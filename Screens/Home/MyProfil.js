@@ -7,12 +7,14 @@ import {
   Text,
   TextInput,
   TouchableHighlight,
+  TouchableOpacity,
   View,
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import firebase from "../../Config";
 import { fonts, layout, colors } from "../../Styles/styles";
 import { supabase } from "../../Config";
+import Icon from "react-native-vector-icons/MaterialIcons"; // Import des icônes
 const database = firebase.database();
 
 export default function MyProfil(props) {
@@ -24,8 +26,8 @@ export default function MyProfil(props) {
   const [telephone, setTelephone] = useState("");
   const [uriImage, seturiImage] = useState("");
   const [isDefaultImage, setisDefaultImage] = useState(true);
-  const [isModified, setIsModified] = useState(false); 
-  const [imageModified, setimageModified] = useState(false)
+  const [isModified, setIsModified] = useState(false);
+  const [imageModified, setimageModified] = useState(false);
 
   // Create refs for each TextInput
   const pseudoInputRef = useRef(null);
@@ -42,7 +44,7 @@ export default function MyProfil(props) {
         setTelephone(profileData.telephone || "");
         seturiImage(profileData.uriImage || "");
         setisDefaultImage(profileData.uriImage ? false : true);
-  
+
         // If profile is incomplete, show alert or redirect
         if (!profileData.nom || !profileData.pseudo || !profileData.telephone) {
           alert("Veuillez compléter votre profil avant de continuer.");
@@ -50,8 +52,7 @@ export default function MyProfil(props) {
       }
     });
   }, [currentId]);
-  
-  
+
   // Compare les données pour détecter des modifications
   const handleInputChange = (field, value) => {
     switch (field) {
@@ -72,27 +73,27 @@ export default function MyProfil(props) {
 
   const uploadImageToSupaBase = async () => {
     // Transforme l'URI en blob pour l'upload
-    const response = await fetch(uriImage); 
+    const response = await fetch(uriImage);
     const blob = await response.blob();
     const arraybuffer = await new Response(blob).arrayBuffer();
-  
+
     // Upload de l'image dans Supabase
     const { error } = await supabase.storage
       .from("ProfileImage") // Accède au bon bucket
       .upload(currentId + ".jpg", arraybuffer, {
         upsert: true, // Écrase l'image si elle existe déjà
       });
-  
+
     if (error) {
       console.error("Erreur lors de l'upload de l'image :", error.message);
       return null;
     }
-  
+
     // Récupère l'URL publique de l'image uploadée
     const { data } = supabase.storage
       .from("ProfileImage")
       .getPublicUrl(currentId + ".jpg");
-  
+
     return data.publicUrl; // Retourne l'URL publique
   };
 
@@ -145,15 +146,22 @@ export default function MyProfil(props) {
       });
 
       console.log("Profil mis à jour avec succès.");
-      setIsModified(false); 
-      setimageModified(false)
-
+      setIsModified(false);
+      setimageModified(false);
     } catch (error) {
-      console.error(
-        "Erreur lors de la mise à jour du profil : ",
-        error
-      );
+      console.error("Erreur lors de la mise à jour du profil : ", error);
     }
+  };
+  const handleLogout = () => {
+    firebase
+      .auth()
+      .signOut()
+      .then(() => {
+        navigation.replace("Authentification");
+      })
+      .catch((error) =>
+        console.error("Erreur lors de la déconnexion :", error)
+      );
   };
 
   return (
@@ -162,68 +170,130 @@ export default function MyProfil(props) {
       style={styles.container}
     >
       <StatusBar style="light" />
-      <View style={layout.innerContainer}>
-        <Text style={[fonts.title, { marginTop: 15 }, { marginBottom: 10 }]}>
-          My Account
-        </Text>
-
-        <TouchableHighlight onPress={pickImage}>
-          <Image
-            source={
-              isDefaultImage
-                ? require("../../assets/profil.png")
-                : { uri: uriImage }
-            }
-            style={{
-              borderRadius: 100,
-              height: 200,
-              width: 200,
-            }}
+      <View
+        style={[
+          styles.header,
+          {
+            position: "absolute",
+            top: 80,
+            alignItems: "center",
+          },
+        ]}
+      >
+        <View style={{ flexDirection: "row", alignItems: "center" }}>
+          {/* alignItems: "center" aligne l'icône et le texte verticalement */}
+          <Icon
+            name="person"
+            size={30}
+            color="#fff"
+            style={{ marginRight: 10 }}
           />
+          {/* Ajout d'un espacement entre l'icône et le texte */}
+          <Text style={fonts.title}>Mon Profil</Text>
+        </View>
+
+        <TouchableOpacity onPress={handleLogout}>
+          <Icon name="logout" size={30} color="#fff" />
+        </TouchableOpacity>
+      </View>
+      <View style={styles.profileLine}></View>
+
+      <View
+        style={[
+          layout.innerContainer,
+          {
+            height: "75%",
+            position: "absolute",
+            bottom: 30,
+            alignItems: "center",
+          },
+        ]}
+      >
+        <TouchableHighlight onPress={pickImage}>
+          <View style={styles.imageContainer}>
+            <Image
+              source={
+                isDefaultImage
+                  ? require("../../assets/profil.png")
+                  : { uri: uriImage }
+              }
+              style={styles.profileImage}
+            />
+            <View style={styles.editIcon}>
+              <Icon name="edit" size={20} color="#fff" />
+            </View>
+          </View>
         </TouchableHighlight>
 
-        {/* Wrap the form inside the innerContainer */}
-        <TextInput
-          value={nom}
-          onChangeText={(text) => handleInputChange("nom", text)}
-          textAlign="center"
-          placeholderTextColor="#000"
-          placeholder="Nom"
-          keyboardType="name-phone-pad"
-          style={[fonts.input, { marginTop: 20, marginBottom: 10, borderRadius: 10, color: "#000" }]}
-          returnKeyType="next" // Show next button on keyboard
-          onSubmitEditing={() => pseudoInputRef.current.focus()} // Move to next field
-        />
+        <View style={styles.inputGroup}>
+          <Icon
+            name="person"
+            size={20}
+            color={colors.buttonColor}
+            style={styles.inputIcon}
+          />
+          <TextInput
+            value={nom}
+            onChangeText={(text) => handleInputChange("nom", text)}
+            placeholderTextColor={colors.placeholder}
+            placeholder="Nom"
+            style={styles.input}
+            returnKeyType="next"
+            onSubmitEditing={() => pseudoInputRef.current.focus()}
+          />
+        </View>
 
-        <TextInput
-          value={pseudo}
-          ref={pseudoInputRef} // Attach ref to this input
-          onChangeText={(text) => handleInputChange("pseudo", text)}
-          textAlign="center"
-          placeholderTextColor="#000"
-          placeholder="Pseudo"
-          keyboardType="name-phone-pad"
-          style={[fonts.input, { marginBottom: 10, borderRadius: 10, color: "#000" }]}
-          returnKeyType="next" // Show next button on keyboard
-          onSubmitEditing={() => telephoneInputRef.current.focus()} // Move to next field
-        />
+        <View style={styles.inputGroup}>
+          <Icon
+            name="alternate-email"
+            size={20}
+            color={colors.buttonColor}
+            style={styles.inputIcon}
+          />
+          <TextInput
+            value={pseudo}
+            ref={pseudoInputRef}
+            onChangeText={(text) => handleInputChange("pseudo", text)}
+            placeholderTextColor={colors.placeholder}
+            placeholder="Pseudo"
+            style={styles.input}
+            returnKeyType="next"
+            onSubmitEditing={() => telephoneInputRef.current.focus()}
+          />
+        </View>
 
-        <TextInput
-          value={telephone}
-          ref={telephoneInputRef} // Attach ref to this input
-          onChangeText={(text) => handleInputChange("telephone", text)}
-          placeholderTextColor="#000"
-          textAlign="center"
-          placeholder="Télephone"
-          style={[fonts.input, { marginBottom: 10, borderRadius: 10, color: "#000" }]}
-          returnKeyType="done" // Show done button on keyboard
-          onSubmitEditing={() => {}} // No further action after this field
-        />
+        <View style={styles.inputGroup}>
+          <Icon
+            name="phone"
+            size={20}
+            color={colors.buttonColor}
+            style={styles.inputIcon}
+          />
+          <TextInput
+            value={telephone}
+            ref={telephoneInputRef}
+            onChangeText={(text) => handleInputChange("telephone", text)}
+            placeholderTextColor={colors.placeholder}
+            placeholder="Téléphone"
+            style={styles.input}
+            returnKeyType="done"
+          />
+        </View>
 
         <TouchableHighlight
           onPress={handleSave}
-          style={[layout.button, styles.saveButton, { backgroundColor: isModified ? colors.buttonColor : "#ccc" }]} // Désactivation du bouton si non modifié
-          underlayColor={isModified ? colors.buttonColor : "#aaa"}
+          style={[
+            layout.button,
+            styles.saveButton,
+            {
+              backgroundColor: isModified
+                ? colors.buttonColor
+                : "rgba(0, 0, 0, 0.15)",
+            },
+          ]} // Désactivation du bouton si non modifié
+          underlayColor={
+            isModified ? colors.buttonColor : "rgba(0, 0, 0, 0.15)"
+          }
           disabled={!isModified} // Désactive le bouton si non modifié
         >
           <Text style={fonts.buttonText}>Save</Text>
@@ -240,9 +310,69 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  saveButton: {
-    width: "50%",
-    marginTop: 20,
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    width: "95%",
+    paddingHorizontal: 20,
     marginBottom: 20,
+  },
+  profileLine: {
+    width: "85%", // Peut être ajusté pour correspondre à votre design
+    height: 2,
+    backgroundColor: "rgba(0, 0, 0, 0.3)", // Utilisez la couleur que vous préférez
+    position: "absolute",
+    top: 130,
+    alignItems: "center",
+  },
+  imageContainer: {
+    position: "relative",
+    marginBottom: 30,
+    marginTop: 30,
+  },
+  profileImage: {
+    width: 150,
+    height: 150,
+    borderRadius: 100,
+    borderWidth: 2,
+    borderColor: colors.buttonColor,
+  },
+
+  editIcon: {
+    position: "absolute",
+    bottom: 5,
+    right: 5,
+    backgroundColor: colors.buttonColor,
+    borderRadius: 15,
+    padding: 5,
+  },
+  saveButton: {
+    width: "60%",
+    paddingVertical: 15,
+    borderRadius: 10,
+    alignItems: "center",
+    marginTop: 115,
+    marginBottom: 20,
+  },
+
+  inputGroup: {
+    flexDirection: "row",
+    alignItems: "center",
+    borderColor: colors.buttonColor,
+    borderWidth: 2,
+    borderRadius: 10,
+    padding: 5,
+    marginVertical: 5,
+    width: "100%",
+    backgroundColor: colors.inputBackground,
+  },
+  inputIcon: {
+    marginRight: 10,
+  },
+  input: {
+    flex: 1,
+    fontSize: 16,
+    color: colors.text,
   },
 });

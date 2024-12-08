@@ -37,13 +37,16 @@ export default function App() {
 
   return (
     <NavigationContainer>
-      <Stack.Navigator
-        screenOptions={{
-          headerShown: false,
-        }}
-      >
+      <Stack.Navigator screenOptions={{ headerShown: false }}>
         {currentUser ? (
-          <Stack.Screen name="Home" component={Home} initialParams={{ currentId: currentUser.uid }} />
+          <>
+            <Stack.Screen
+              name="Home"
+              component={Home}
+              initialParams={{ currentId: currentUser.uid }}
+            />
+            <Stack.Screen name="Chat" component={Chat} />
+          </>
         ) : (
           <>
             <Stack.Screen name="Authentification" component={Authentification} />
@@ -52,17 +55,14 @@ export default function App() {
               component={NewUser}
               options={{
                 headerShown: true,
-                headerStyle: {
-                  backgroundColor: colors.buttonColor,
-                },
+                headerStyle: { backgroundColor: colors.buttonColor },
                 headerTintColor: "white",
                 title: "Retour à authentification",
               }}
             />
           </>
         )}
-        <Stack.Screen name="Chat" component={Chat} />
       </Stack.Navigator>
     </NavigationContainer>
-  );
+  );  
 }

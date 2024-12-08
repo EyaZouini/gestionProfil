@@ -6,6 +6,7 @@ import {
   ImageBackground,
   StyleSheet,
   Text,
+  TextInput,
   View,
   TouchableOpacity,
   Animated,
@@ -21,8 +22,10 @@ import { Ionicons } from "react-native-vector-icons";
 
 export default function ListProfil({ route, navigation }) {
   const [profiles, setProfiles] = useState([]);
+  const [filteredProfiles, setFilteredProfiles] = useState([]);
   const [currentUser, setCurrentUser] = useState(null);
   const { currentId } = route.params;
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     const listener = ref_tableProfils.on("value", (snapshot) => {
@@ -36,10 +39,21 @@ export default function ListProfil({ route, navigation }) {
         }
       });
       setProfiles(fetchedProfiles);
+      setFilteredProfiles(fetchedProfiles);
     });
 
     return () => ref_tableProfils.off("value", listener);
   }, [currentId]);
+
+  const handleSearch = (text) => {
+    setSearchQuery(text);
+    const filtered = profiles.filter(
+      (profile) =>
+        profile.pseudo?.toLowerCase().includes(text.toLowerCase()) ||
+        profile.nom?.toLowerCase().includes(text.toLowerCase())
+    );
+    setFilteredProfiles(filtered);
+  };
 
   // Animation pour les boutons
   const pulseAnimation = useRef(new Animated.Value(1)).current;
@@ -88,18 +102,28 @@ export default function ListProfil({ route, navigation }) {
         <View
           style={[
             styles.connectionStatus,
-            { backgroundColor: item.isConnected ? colors.buttonColor : "#81010b" },
+            {
+              backgroundColor: item.isConnected
+                ? colors.buttonColor
+                : "#81010b",
+            },
           ]}
         ></View>
         <Image
-          source={item.uriImage ? { uri: item.uriImage } : require("../../assets/profil.png")}
+          source={
+            item.uriImage
+              ? { uri: item.uriImage }
+              : require("../../assets/profil.png")
+          }
           style={styles.profileImage}
         />
         <View style={styles.profileInfo}>
           <Text style={styles.profilePseudo}>
             {item.pseudo || "Pseudo indisponible"}
           </Text>
-          <Text style={styles.profileName}>{item.nom || "Nom indisponible"}</Text>
+          <Text style={styles.profileName}>
+            {item.nom || "Nom indisponible"}
+          </Text>
         </View>
         <View style={styles.buttonsContainer}>
           <Animated.View style={animatedStyle}>
@@ -130,11 +154,30 @@ export default function ListProfil({ route, navigation }) {
   };
 
   return (
-    <ImageBackground source={require("../../assets/background.png")} style={styles.container}>
+    <ImageBackground
+      source={require("../../assets/background.png")}
+      style={styles.container}
+    >
       <StatusBar style="light" />
+      <View style={styles.searchContainer}>
+        <Ionicons
+          name="search"
+          size={20}
+          color="#aaa"
+          style={{ marginRight: 8 }}
+        />
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Rechercher un contact..."
+          placeholderTextColor="#aaa"
+          value={searchQuery}
+          onChangeText={handleSearch}
+        />
+      </View>
+      <View style={styles.profileLine}></View>
       <FlatList
-        data={profiles}
-        keyExtractor={(item) => item.id}
+        data={filteredProfiles} // Correction ici
+        keyExtractor={(item, index) => item.id || index.toString()} // Gestion des clés uniques
         renderItem={renderProfileItem}
         style={styles.list}
       />
@@ -149,8 +192,34 @@ const styles = StyleSheet.create({
     justifyContent: "flex-start",
     paddingTop: 40,
   },
+
+  searchContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.15)",
+    borderRadius: 10,
+    marginTop: 35,
+    paddingHorizontal: 10,
+    marginBottom: 15,
+    width: "90%",
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 16,
+    color: "#fff",
+    height: 40,
+  },
   list: {
     width: "90%",
+    marginTop: 10,
+  },
+  profileLine: {
+    width: "90%", // Peut être ajusté pour correspondre à votre design
+    height: 2,
+    backgroundColor: "rgba(0, 0, 0, 0.3)", // Utilisez la couleur que vous préférez
+    position: "absolute",
+    top: 130,
+    alignItems: "center",
   },
   profileCard: {
     flexDirection: "row",
