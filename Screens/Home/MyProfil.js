@@ -152,6 +152,7 @@ export default function MyProfil(props) {
       console.error("Erreur lors de la mise à jour du profil : ", error);
     }
   };
+
   const handleLogout = () => {
     firebase
       .auth()
@@ -162,6 +163,28 @@ export default function MyProfil(props) {
       .catch((error) =>
         console.error("Erreur lors de la déconnexion :", error)
       );
+  };
+
+  // Function to take a photo using the camera
+  const takePhoto = async () => {
+    let permissionResult = await ImagePicker.requestCameraPermissionsAsync();
+    if (permissionResult.granted === false) {
+      alert("Permission to access camera is required!");
+      return;
+    }
+
+    let cameraResult = await ImagePicker.launchCameraAsync({
+      allowsEditing: true,
+      aspect: [1, 1], // Aspect ratio 1:1 for square image
+      quality: 1, // Highest quality
+    });
+
+    if (!cameraResult.canceled) {
+      seturiImage(cameraResult.assets[0].uri); // Set the URI of the taken photo
+      setisDefaultImage(false); // Set the default image flag to false
+      setIsModified(true); // Mark the profile as modified
+      setimageModified(true); // Mark the image as modified
+    }
   };
 
   return (
@@ -209,21 +232,28 @@ export default function MyProfil(props) {
           },
         ]}
       >
-        <TouchableHighlight onPress={pickImage}>
-          <View style={styles.imageContainer}>
-            <Image
-              source={
-                isDefaultImage
-                  ? require("../../assets/profil.png")
-                  : { uri: uriImage }
-              }
-              style={styles.profileImage}
-            />
+        <View style={styles.imageContainer}>
+          <Image
+            source={
+              isDefaultImage
+                ? require("../../assets/profil.png")
+                : { uri: uriImage }
+            }
+            style={styles.profileImage}
+          />
+          {/* Icone d'édition */}
+          <TouchableOpacity onPress={pickImage}>
             <View style={styles.editIcon}>
               <Icon name="edit" size={20} color="#fff" />
             </View>
-          </View>
-        </TouchableHighlight>
+          </TouchableOpacity>
+          {/* Icone de prise de photo */}
+          <TouchableOpacity onPress={takePhoto}>
+            <View style={styles.captureButton}>
+              <Icon name="camera-alt" size={20} color="#fff" />
+            </View>
+          </TouchableOpacity>
+        </View>
 
         <View style={styles.inputGroup}>
           <Icon
@@ -318,19 +348,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     marginBottom: 20,
   },
-  profileLine: {
-    width: "85%", // Peut être ajusté pour correspondre à votre design
-    height: 2,
-    backgroundColor: "rgba(0, 0, 0, 0.3)", // Utilisez la couleur que vous préférez
-    position: "absolute",
-    top: 130,
-    alignItems: "center",
-  },
-  imageContainer: {
+  imageContainer: { 
     position: "relative",
     marginBottom: 30,
     marginTop: 30,
   },
+  
   profileImage: {
     width: 150,
     height: 150,
@@ -338,7 +361,7 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: colors.buttonColor,
   },
-
+  
   editIcon: {
     position: "absolute",
     bottom: 5,
@@ -346,6 +369,24 @@ const styles = StyleSheet.create({
     backgroundColor: colors.buttonColor,
     borderRadius: 15,
     padding: 5,
+  },
+  
+  captureButton: {
+    position: "absolute",
+    bottom: 5,
+    left: 5, // Positionnez à gauche de l'image pour l'icône caméra
+    backgroundColor: colors.buttonColor,
+    borderRadius: 15,
+    padding: 5,
+  },
+  
+  profileLine: {
+    width: "85%", // Peut être ajusté pour correspondre à votre design
+    height: 2,
+    backgroundColor: "rgba(0, 0, 0, 0.3)", // Utilisez la couleur que vous préférez
+    position: "absolute",
+    top: 130,
+    alignItems: "center",
   },
   saveButton: {
     width: "60%",
