@@ -68,7 +68,7 @@ export default function Group(props) {
         style={[
           layout.innerContainer,
           {
-            height: "30%",
+            height: 250,
             alignItems: "center",
           },
         ]}
