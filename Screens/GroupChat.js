@@ -10,16 +10,37 @@ import {
 } from "react-native";
 import React, { useState, useEffect, useRef } from "react";
 import firebase from "../Config";
+import { colors, layout, fonts } from "../Styles/styles";
 
 const database = firebase.database();
 const ref_groupChats = database.ref("groupChats");
 
 export default function GroupChat(props) {
-  const currentid = props.route.params.currentid;
+  const currentId = props.route.params.currentId;
+  const groupId = props.route.params.groupId;
+
   const [currentUser, setcurrentUser] = useState({});
+  const [Msg, setMsg] = useState("");
+  const [data, setData] = useState([]);
+  const [groupName, setGroupName] = useState("");
+  const flatListRef = useRef(null);
+
+  useEffect(() => {
+    const fetchGroupName = async () => {
+      const refGroupInfo = database.ref("Groups").child(groupId);
+      const snapshot = await refGroupInfo.once("value");
+      const data = snapshot.val();
+      if (data?.name) {
+        setGroupName(data.name);
+      }
+    };
+
+    fetchGroupName();
+  }, [groupId]);
+
   useEffect(() => {
     const fetchData = async () => {
-      const refProfile = database.ref(`TableProfils/unprofil${currentid}`);
+      const refProfile = database.ref("TableProfils").child(currentId);
       const snapshot = await refProfile.once("value");
       const data = snapshot.val();
       if (data) {
@@ -29,13 +50,7 @@ export default function GroupChat(props) {
     fetchData();
   }, []);
 
-  const groupId = props.route.params.groupId;
-
   const ref_group = ref_groupChats.child(groupId);
-
-  const [Msg, setMsg] = useState("");
-  const [data, setData] = useState([]);
-  const flatListRef = useRef(null);
 
   useEffect(() => {
     const onValueChange = ref_group.on("value", (snapshot) => {
@@ -63,59 +78,104 @@ export default function GroupChat(props) {
         time: new Date().toLocaleString(),
         senderId: currentUser.id,
         senderName: currentUser.nom,
+        senderImage: currentUser.uriImage,
       })
       .then(() => setMsg(""))
       .catch((error) => console.error("Error sending message:", error));
   };
 
+  const extractDate = (timestamp) => timestamp.split(" ")[0];
+  const extractTime = (timestamp) => timestamp.split(" ")[1];
+
   return (
-    <View style={styles.container}>
+    <View style={styles.mainContainer}>
       <ImageBackground
-        source={require("../assets/download.jpg")}
-        style={styles.background}
+        source={require("../assets/background.png")}
+        style={styles.container}
       >
-        <Text style={styles.headerText}>Group Chat: {groupId}</Text>
-        <View style={{ flex: 1, width: "100%", alignItems: "center" }}>
-          <FlatList
-            ref={flatListRef}
-            onContentSizeChange={() =>
-              flatListRef.current.scrollToEnd({ animated: true })
-            }
-            onLayout={() => flatListRef.current.scrollToEnd({ animated: true })}
-            style={styles.messageList}
-            data={data}
-            keyExtractor={(item, index) => index.toString()}
-            renderItem={({ item }) => {
-              const isCurrentUser = item.senderId === currentUser.id;
-              const messageStyle = isCurrentUser
-                ? styles.currentUserMessage
-                : styles.otherUserMessage;
-              const textColor = isCurrentUser ? "#FFF" : "#000";
+        <Text style={styles.headerText}>
+          {groupName || "Group Chat"}{" "}
+          {/* Affiche "Group Chat" par défaut si le nom n'est pas encore chargé */}
+        </Text>
+
+        <FlatList
+          ref={flatListRef}
+          onContentSizeChange={() =>
+            flatListRef.current.scrollToEnd({ animated: true })
+          }
+          onLayout={() => flatListRef.current.scrollToEnd({ animated: true })}
+          style={styles.messagesContainer}
+          data={data}
+          keyExtractor={(item, index) => index.toString()}
+          renderItem={({ item, index }) => {
+            const isCurrentUser = item.senderId === currentUser.id;
+            const color = isCurrentUser ? "#FFF" : "#444";
+            const textColor = isCurrentUser ? colors.buttonColor : "#fff";
+
+            const showProfileImage =
+              index === 0 || item.senderId !== data[index - 1]?.senderId;
+
+            const currentMessageDate = extractDate(item.time);
+            const previousMessageDate =
+              index > 0 ? extractDate(data[index - 1]?.time) : null;
 
               return (
-                <View style={messageStyle}>
-                  <View style={styles.messageBubble}>
-                    <Text style={{ color: textColor }}>
-                      {item.senderName}: {item.body}
-                    </Text>
-                    <Text style={styles.timestamp}>{item.time}</Text>
+                <>
+                  {index === 0 || currentMessageDate !== previousMessageDate ? (
+                    <View style={styles.dateSeparatorContainer}>
+                      <Text style={styles.dateSeparatorText}>
+                        {currentMessageDate}
+                      </Text>
+                      <View style={styles.line} />
+                    </View>
+                  ) : null}
+                    {showProfileImage && (
+                      <Text style={styles.senderName}>
+                        {item.senderName}
+                      </Text>
+                    )}
+                  <View
+                    style={[
+                      styles.messageContainer,
+                      {
+                        flexDirection: isCurrentUser ? "row-reverse" : "row",
+                      },
+                    ]}
+                  >
+                    {showProfileImage && item.senderImage ? (
+                      <Image
+                        source={{ uri: item.senderImage }}
+                        style={styles.profileImage}
+                      />
+                    ) : (
+                      <View style={styles.profileImage} />
+                    )}
+                    <View style={[styles.message, { backgroundColor: color }]}>
+                      <View style={styles.messageContent}>
+                        <Text style={[styles.messageText, { color: textColor }]}>
+                          {item.body}
+                        </Text>
+                        <Text style={styles.messageTime}>
+                          {extractTime(item.time)}
+                        </Text>
+                      </View>
+                    </View>
                   </View>
-                </View>
+                </>
               );
             }}
-          />
-        </View>
-
+        />
         <View style={styles.inputContainer}>
           <TextInput
             value={Msg}
             onChangeText={setMsg}
+            placeholderTextColor="#ccc"
             placeholder="Type a message"
-            style={styles.textInput}
+            style={styles.textinput}
           />
           <TouchableHighlight
             activeOpacity={0.5}
-            underlayColor="#DDDDDD"
+            underlayColor="#555"
             style={styles.sendButton}
             onPress={sendMessage}
           >
@@ -128,84 +188,116 @@ export default function GroupChat(props) {
 }
 
 const styles = StyleSheet.create({
-  container: {
+  mainContainer: {
     flex: 1,
   },
-  background: {
+  container: {
     flex: 1,
-    justifyContent: "center",
+    justifyContent: "flex-start",
     alignItems: "center",
+    padding: 5,
   },
   headerText: {
     marginTop: 50,
-    fontSize: 18,
+    fontSize: 22,
     fontWeight: "bold",
-    color: "#FFF",
+    color: "#ffffff",
   },
-  messageList: {
-    backgroundColor: "#FFF3",
-    width: "90%",
-    borderRadius: 8,
-    height: "70%",
+  typingIndicator: {
+    fontSize: 14,
+    color: "#ccc",
+    fontStyle: "italic",
+    marginBottom: 10,
   },
-  messageBubble: {
-    margin: 5,
+  messagesContainer: {
+    backgroundColor: "rgba(0, 0, 0, 0.4)",
+    width: "95%",
+    borderRadius: 10,
+    marginVertical: 20,
+    padding: 5,
+    paddingTop: 20,
+  },
+  messageContainer: {
+    flexDirection: "column",
+    marginBottom: 10,
+  },
+  message: {
     padding: 10,
-    borderRadius: 15,
-    maxWidth: "75%",
-    backgroundColor: "blue",
+    marginVertical: 0,
+    borderRadius: 8,
+    maxWidth: "80%",
   },
-  currentUserMessage: {
-    alignSelf: "flex-end",
-    flexDirection: "row",
-    maxWidth: "75%",
-    alignItems: "center",
+  messageContent: {
+    flexDirection: "column",
+    alignItems: "flex-start",
   },
-  otherUserMessage: {
-    alignSelf: "flex-start",
-    flexDirection: "row-reverse",
-    maxWidth: "75%",
-    alignItems: "center",
+  messageText: {
+    fontSize: 16,
   },
-  timestamp: {
-    fontSize: 10,
-    color: "#AAA",
+  messageTime: {
+    fontSize: 12,
+    color: "#aaa",
+  },
+  profileImage: {
+    width: 35,
+    height: 35,
+    borderRadius: 50,
+    marginRight: 5,
+    marginLeft: 5,
     marginTop: 5,
-    textAlign: "right",
   },
   inputContainer: {
     flexDirection: "row",
-    margin: 10,
+    alignItems: "center",
+    marginBottom: 20,
+    marginHorizontal: 10,
   },
-  textInput: {
-    fontWeight: "bold",
-    backgroundColor: "#0004",
-    fontSize: 20,
+  textinput: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.4)",
     color: "#fff",
-    width: "65%",
     height: 50,
+    fontSize: 15,
+    paddingVertical: 10,
+    paddingHorizontal: 15,
     borderRadius: 10,
-    paddingHorizontal: 10,
+    marginRight: 10,
   },
   sendButton: {
-    borderColor: "#00f",
-    borderWidth: 2,
-    backgroundColor: "#08f6",
     justifyContent: "center",
     alignItems: "center",
-    borderRadius: 5,
-    marginLeft: 10,
+    backgroundColor: colors.buttonColor,
+    borderRadius: 10,
     height: 50,
     width: "30%",
   },
+  dateSeparatorContainer: {
+    alignItems: "center",
+    marginBottom: 20,
+  },
+  dateSeparatorText: {
+    color: "#aaa",
+    paddingVertical: 5,
+    borderRadius: 20,
+    fontSize: 12,
+    fontStyle: "italic",
+  },
+  line: {
+    height: 1,
+    backgroundColor: "#aaa",
+    width: "80%",
+  },
   sendButtonText: {
-    color: "#FFF",
+    color: "#fff",
     fontSize: 18,
+    fontWeight: "bold",
   },
-  image: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    marginHorizontal: 10,
+  senderName: {
+    fontSize: 14,
+    marginBottom: 5,
+    textAlign: "right",
+    marginRight:50,
+    color : "#aaa"
   },
+  
 });

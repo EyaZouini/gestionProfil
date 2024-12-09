@@ -19,7 +19,7 @@ export default function Group(props) {
   const [groups, setGroups] = useState([]);
   const [newGroupName, setNewGroupName] = useState("");
   const [newGroupDescription, setNewGroupDescription] = useState("");
-  const currentid = props.route.params.currentid;
+  const currentId = props.route.params.currentId;
 
   // Fetch groups from Firebase
   useEffect(() => {
@@ -46,7 +46,7 @@ export default function Group(props) {
       id: groupId,
       name: newGroupName,
       description: newGroupDescription || "",
-      members: { [currentid]: true },
+      members: { [currentId]: true },
     };
 
     ref_Groups.child(groupId).set(newGroup);
@@ -123,19 +123,15 @@ export default function Group(props) {
           <TouchableOpacity
             style={styles.groupItem}
             onPress={() => {
-              if (!item.members || !item.members[currentid]) {
-                // Add the current user to the members
-                const updatedMembers = { ...item.members, [currentid]: true };
+              if (!item.members || !item.members[currentId]) {
+                const updatedMembers = { ...item.members, [currentId]: true };
 
                 ref_Groups
                   .child(item.id)
                   .update({ members: updatedMembers })
                   .then(() => {
-                    console.log(
-                      `User ${currentid} added to group ${item.name}`
-                    );
-                    navigation.navigate("GroupChat", {
-                      currentid: currentid,
+                    props.navigation.navigate("GroupChat", {
+                      currentId: currentId,
                       groupId: item.id,
                     });
                   })
@@ -143,10 +139,8 @@ export default function Group(props) {
                     console.error("Error adding user to group:", error);
                   });
               } else {
-                // User is already a member, just navigate
-
                 props.navigation.navigate("GroupChat", {
-                  currentid: currentid,
+                  currentId: currentId,
                   groupId: item.id,
                 });
               }

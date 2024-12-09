@@ -99,7 +99,7 @@ export default function Chat(props) {
         style={styles.container}
       >
         <Text style={styles.headerText}>
-          Chat {currentUser.nom} + {secondUser.nom}
+          {secondUser.pseudo} : {secondUser.nom}
         </Text>
 
         <FlatList
