@@ -204,7 +204,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "flex-start",
     alignItems: "center",
-    padding: 20,
+    padding: 5,
   },
   headerText: {
     marginTop: 50,

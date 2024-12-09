@@ -7,6 +7,7 @@ import Home from "./Screens/Home";
 import NewUser from "./Screens/NewUser";
 import Chat from "./Screens/Chat";
 import { colors } from "./Styles/styles";
+import GroupChat from "./Screens/GroupChat";
 
 const Stack = createNativeStackNavigator();
 const auth = firebase.auth();
@@ -46,6 +47,7 @@ export default function App() {
               initialParams={{ currentId: currentUser.uid }}
             />
             <Stack.Screen name="Chat" component={Chat} />
+            <Stack.Screen name="GroupChat" component={GroupChat} />
           </>
         ) : (
           <>
