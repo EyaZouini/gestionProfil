@@ -192,14 +192,14 @@ export default function MyProfil(props) {
         ]}
       >
         <View style={{ flexDirection: "row", alignItems: "center" }}>
-          {/* alignItems: "center" aligne l'icône et le texte verticalement */}
+    
           <Icon
             name="person"
             size={30}
             color="#fff"
             style={{ marginRight: 10 }}
           />
-          {/* Ajout d'un espacement entre l'icône et le texte */}
+    
           <Text style={fonts.title}>Mon Profil</Text>
         </View>
 
@@ -240,13 +240,13 @@ export default function MyProfil(props) {
             }
             style={styles.profileImage}
           />
-          {/* Icone d'édition */}
+      
           <TouchableOpacity onPress={pickImage}>
             <View style={styles.editIcon}>
               <Icon name="edit" size={20} color="#fff" />
             </View>
           </TouchableOpacity>
-          {/* Icone de prise de photo */}
+        
           <TouchableOpacity onPress={takePhoto}>
             <View style={styles.captureButton}>
               <Icon name="camera-alt" size={20} color="#fff" />
