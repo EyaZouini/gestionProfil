@@ -112,7 +112,7 @@ export default function ListProfil({ route, navigation }) {
         <Image
           source={
             item.uriImage
-              ? { uri: item.uriImage }
+              ? { uri: item.uriImage /*+ "?" + new Date().getTime() */} // Ajout d'un paramètre unique
               : require("../../assets/profil.png")
           }
           style={styles.profileImage}

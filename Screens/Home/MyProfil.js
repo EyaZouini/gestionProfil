@@ -153,18 +153,6 @@ export default function MyProfil(props) {
     }
   };
 
-  const handleLogout = () => {
-    firebase
-      .auth()
-      .signOut()
-      .then(() => {
-        navigation.replace("Authentification");
-      })
-      .catch((error) =>
-        console.error("Erreur lors de la déconnexion :", error)
-      );
-  };
-
   // Function to take a photo using the camera
   const takePhoto = async () => {
     let permissionResult = await ImagePicker.requestCameraPermissionsAsync();
@@ -215,7 +203,18 @@ export default function MyProfil(props) {
           <Text style={fonts.title}>Mon Profil</Text>
         </View>
 
-        <TouchableOpacity onPress={handleLogout}>
+        <TouchableOpacity
+          onPress={async () => {
+            try {
+              // Log the user out
+              await firebase.auth().signOut();
+              console.log("User logged out");
+
+            } catch (error) {
+              console.error("Error logging out:", error);
+            }
+          }}
+        >
           <Icon name="logout" size={30} color="#fff" />
         </TouchableOpacity>
       </View>
@@ -237,7 +236,7 @@ export default function MyProfil(props) {
             source={
               isDefaultImage
                 ? require("../../assets/profil.png")
-                : { uri: uriImage }
+                : { uri: uriImage /* + "?" + new Date().getTime()*/ } // Ajout du paramètre unique pour contourner le cache
             }
             style={styles.profileImage}
           />
@@ -348,12 +347,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     marginBottom: 20,
   },
-  imageContainer: { 
+  imageContainer: {
     position: "relative",
     marginBottom: 30,
     marginTop: 30,
   },
-  
+
   profileImage: {
     width: 150,
     height: 150,
@@ -361,7 +360,7 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: colors.buttonColor,
   },
-  
+
   editIcon: {
     position: "absolute",
     bottom: 5,
@@ -370,7 +369,7 @@ const styles = StyleSheet.create({
     borderRadius: 15,
     padding: 5,
   },
-  
+
   captureButton: {
     position: "absolute",
     bottom: 5,
@@ -379,7 +378,7 @@ const styles = StyleSheet.create({
     borderRadius: 15,
     padding: 5,
   },
-  
+
   profileLine: {
     width: "85%", // Peut être ajusté pour correspondre à votre design
     height: 2,
