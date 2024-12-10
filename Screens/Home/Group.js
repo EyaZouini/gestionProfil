@@ -9,7 +9,8 @@ import {
   Modal,
   ImageBackground,
 } from "react-native";
-import Icon from "react-native-vector-icons/MaterialIcons"; 
+import Icon from "react-native-vector-icons/MaterialIcons";
+import Ionicons from "react-native-vector-icons/Ionicons"; // Import de Ionicons
 import { fonts, colors } from "../../Styles/styles";
 import firebase from "../../Config";
 
@@ -18,6 +19,8 @@ const ref_Groups = database.ref("Groups");
 
 export default function Group(props) {
   const [groups, setGroups] = useState([]);
+  const [filteredGroups, setFilteredGroups] = useState([]);
+  const [searchQuery, setSearchQuery] = useState("");
   const [modalVisible, setModalVisible] = useState(false);
   const [newGroupName, setNewGroupName] = useState("");
   const [newGroupDescription, setNewGroupDescription] = useState("");
@@ -31,10 +34,23 @@ export default function Group(props) {
         groupList.push(group.val());
       });
       setGroups(groupList);
+      setFilteredGroups(groupList); // Initialement, tous les groupes sont affichés
     });
 
     return () => ref_Groups.off();
   }, []);
+
+  const handleSearch = (query) => {
+    setSearchQuery(query);
+    if (query.trim() === "") {
+      setFilteredGroups(groups); // Réinitialiser la liste si aucun texte de recherche
+    } else {
+      const filtered = groups.filter((group) =>
+        group.name.toLowerCase().includes(query.toLowerCase())
+      );
+      setFilteredGroups(filtered);
+    }
+  };
 
   const createGroup = () => {
     if (!newGroupName.trim()) {
@@ -62,16 +78,28 @@ export default function Group(props) {
       source={require("../../assets/background.png")}
       style={styles.container}
     >
-      <Text style={[fonts.title, { marginTop: 60 }]}>Liste des Groupes</Text>
+      <View style={styles.searchContainer}>
+        <Ionicons
+          name="search"
+          size={20}
+          color="#aaa"
+          style={{ marginRight: 8 }}
+        />
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Rechercher un groupe..."
+          placeholderTextColor="#aaa"
+          value={searchQuery}
+          onChangeText={handleSearch}
+        />
+      </View>
 
       <View style={styles.profileLine}></View>
+      
 
-      <Text style={[fonts.title, { marginTop: 20 }]}>Discuter</Text>
-
-      {/* Liste des groupes */}
       <FlatList
         style={styles.groupList}
-        data={groups}
+        data={filteredGroups}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
           <TouchableOpacity
@@ -172,10 +200,28 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     justifyContent: "flex-start",
+    paddingTop: 40
   },
   groupList: {
     width: "90%",
     borderRadius: 8,
+    marginTop: 8,
+  },
+  searchContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.15)",
+    borderRadius: 10,
+    marginTop: 35,
+    paddingHorizontal: 10,
+    marginBottom: 15,
+    width: "90%",
+  },
+  searchInput: {
+    flex: 1,
+    height: 40,
+    fontSize: 16,
+    color: "#000",
   },
   groupItem: {
     padding: 15,
