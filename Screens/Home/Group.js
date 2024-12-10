@@ -7,6 +7,7 @@ import {
   FlatList,
   StyleSheet,
   Modal,
+  Image,
   ImageBackground,
 } from "react-native";
 import Icon from "react-native-vector-icons/MaterialIcons";
@@ -16,6 +17,89 @@ import firebase from "../../Config";
 
 const database = firebase.database();
 const ref_Groups = database.ref("Groups");
+
+const GroupPhoto = ({ images }) => {
+  if (images.length === 0) return null;
+
+  if (images.length === 1) {
+    return (
+      <Image
+        source={{ uri: images[0] }}
+        style={{ width: 50, height: 50, borderRadius: 25 }}
+      />
+    );
+  }
+
+  if (images.length === 2) {
+    return (
+      <View style={{ width: 50, height: 50, position: "relative" }}>
+        <Image
+          source={{ uri: images[0] }}
+          style={{
+            width: 35,
+            height: 35,
+            borderRadius: 17.5,
+            position: "absolute",
+            left: 0,
+            top: 0,
+          }}
+        />
+        <Image
+          source={{ uri: images[1] }}
+          style={{
+            width: 35,
+            height: 35,
+            borderRadius: 17.5,
+            position: "absolute",
+            right: 0,
+            bottom: 0,
+          }}
+        />
+      </View>
+    );
+  }
+
+  if (images.length >= 3) {
+    const selectedImages = images.slice(0, 3); // Prendre jusqu'à 3 images
+    return (
+      <View style={{ width: 50, height: 50, position: "relative" }}>
+        <Image
+          source={{ uri: selectedImages[0] }}
+          style={{
+            width: 30,
+            height: 30,
+            borderRadius: 15,
+            position: "absolute",
+            top: 0,
+            left: 10,
+          }}
+        />
+        <Image
+          source={{ uri: selectedImages[1] }}
+          style={{
+            width: 30,
+            height: 30,
+            borderRadius: 15,
+            position: "absolute",
+            bottom: 0,
+            left: 0,
+          }}
+        />
+        <Image
+          source={{ uri: selectedImages[2] }}
+          style={{
+            width: 30,
+            height: 30,
+            borderRadius: 15,
+            position: "absolute",
+            bottom: 0,
+            right: 0,
+          }}
+        />
+      </View>
+    );
+  }
+}
 
 export default function Group(props) {
   const [groups, setGroups] = useState([]);
@@ -30,15 +114,32 @@ export default function Group(props) {
   useEffect(() => {
     ref_Groups.on("value", (snapshot) => {
       const groupList = [];
+      const profileRef = database.ref("TableProfils");
+  
       snapshot.forEach((group) => {
-        groupList.push(group.val());
+        const groupData = group.val();
+        const memberIds = Object.keys(groupData.members || {});
+  
+        // Récupérer les URI des membres pour les photos
+        const memberPromises = memberIds.map((id) =>
+          profileRef.child(id).once("value")
+        );
+  
+        Promise.all(memberPromises).then((profiles) => {
+          const images = profiles
+            .map((snap) => snap.val()?.uriImage)
+            .filter((uri) => uri); // Exclure les images nulles ou non définies
+  
+          groupList.push({ ...groupData, images });
+          setGroups(groupList);
+          setFilteredGroups(groupList); // Initialement, tous les groupes sont affichés
+        });
       });
-      setGroups(groupList);
-      setFilteredGroups(groupList); // Initialement, tous les groupes sont affichés
     });
-
+  
     return () => ref_Groups.off();
   }, []);
+  
 
   const handleSearch = (query) => {
     setSearchQuery(query);
@@ -73,7 +174,6 @@ export default function Group(props) {
         setNewGroupName("");
         setNewGroupDescription("");
         setModalVisible(false);
-        alert("Groupe créé avec succès !");
       })
       .catch((error) => {
         console.error("Erreur lors de la création du groupe :", error);
@@ -107,49 +207,55 @@ export default function Group(props) {
       
 
       <FlatList
-  style={styles.groupList}
-  data={filteredGroups}
-  keyExtractor={(item) => item.id}
-  renderItem={({ item }) => (
-    <View style={styles.groupItem}>
-      <View style={styles.groupTextContainer}>
-        <Text style={styles.groupName}>{item.name}</Text>
-        <Text style={styles.groupDescription}>{item.description}</Text>
-      </View>
-      <TouchableOpacity
-        style={styles.chatButton}
-        onPress={() =>{
-          if (!item.members || !item.members[currentId]) {
-            const updatedMembers = { ...item.members, [currentId]: true };
-          
-            ref_Groups
-              .child(item.id)
-              .update({ members: updatedMembers })
-              .then(() => {
-                props.navigation.navigate("GroupChat", {
-                  currentId: currentId,
-                  groupId: item.id,
-                });
-                console.log("Mise à jour réussie :", updatedMembers);
-              })
-              .catch((error) => {
-                console.error("Erreur lors de l'ajout de l'utilisateur :", error);
-                console.error("Erreur Firebase :", error);
-              });
-          } else {
-            props.navigation.navigate("GroupChat", {
-              currentId: currentId,
-              groupId: item.id,
-            });
-          }
-          
-        }}
+        style={styles.groupList}
+        data={filteredGroups}
+        keyExtractor={(item) => item.id}
+        renderItem={({ item }) => (
+          <View style={styles.groupItem}>
+            {/* Group photo */}
+            <GroupPhoto images={item.images || []} />
+
+            {/* Group text */}
+            <View style={styles.groupTextContainer}>
+              <Text style={styles.groupName}>{item.name}</Text>
+              <Text style={styles.groupDescription}>{item.description}</Text>
+            </View>
+
+            {/* Chat button */}
+            <TouchableOpacity
+              style={styles.chatButton}
+              onPress={() =>{
+                if (!item.members || !item.members[currentId]) {
+                  const updatedMembers = { ...item.members, [currentId]: true };
+                
+                  ref_Groups
+                    .child(item.id)
+                    .update({ members: updatedMembers })
+                    .then(() => {
+                      props.navigation.navigate("GroupChat", {
+                        currentId: currentId,
+                        groupId: item.id,
+                      });
+                      console.log("Mise à jour réussie :", updatedMembers);
+                    })
+                    .catch((error) => {
+                      console.error("Erreur lors de l'ajout de l'utilisateur :", error);
+                      console.error("Erreur Firebase :", error);
+                    });
+                } else {
+                  props.navigation.navigate("GroupChat", {
+                    currentId: currentId,
+                    groupId: item.id,
+                  });
+                }
+                
+              }}
       >
-        <Ionicons name="chatbubble-ellipses" size={25} color="#fff" />
-      </TouchableOpacity>
-    </View>
-  )}
-/>
+              <Ionicons name="chatbubble-ellipses" size={25} color="#fff" />
+            </TouchableOpacity>
+          </View>
+        )}
+      />
 
 
       {/* Bouton flottant (icône "+") */}
@@ -252,6 +358,7 @@ const styles = StyleSheet.create({
   },
   groupTextContainer: {
     flex: 1, // Permet au texte de prendre tout l'espace disponible
+    marginLeft:15
   },
   groupName: {
     fontSize: 18,
