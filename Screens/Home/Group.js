@@ -151,7 +151,7 @@ export default function Group(props) {
       >
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
-            <Text style={[fonts.title, { marginBottom: 20 }]}>Créer un Groupe</Text>
+            <Text style={[fonts.title, { marginBottom: 20 ,color: colors.buttonColor}]}>Créer un Groupe</Text>
 
             <View style={styles.inputGroup}>
               <Icon name="group" size={20} color={colors.buttonColor} />
