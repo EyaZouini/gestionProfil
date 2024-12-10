@@ -98,41 +98,47 @@ export default function Group(props) {
       
 
       <FlatList
-        style={styles.groupList}
-        data={filteredGroups}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <TouchableOpacity
-            style={styles.groupItem}
-            onPress={() => {
-              if (!item.members || !item.members[currentId]) {
-                const updatedMembers = { ...item.members, [currentId]: true };
+  style={styles.groupList}
+  data={filteredGroups}
+  keyExtractor={(item) => item.id}
+  renderItem={({ item }) => (
+    <View style={styles.groupItem}>
+      <View style={styles.groupTextContainer}>
+        <Text style={styles.groupName}>{item.name}</Text>
+        <Text style={styles.groupDescription}>{item.description}</Text>
+      </View>
+      <TouchableOpacity
+        style={styles.chatButton}
+        onPress={() =>{
+          if (!item.members || !item.members[currentId]) {
+            const updatedMembers = { ...item.members, [currentId]: true };
 
-                ref_Groups
-                  .child(item.id)
-                  .update({ members: updatedMembers })
-                  .then(() => {
-                    props.navigation.navigate("GroupChat", {
-                      currentId: currentId,
-                      groupId: item.id,
-                    });
-                  })
-                  .catch((error) => {
-                    console.error("Error adding user to group:", error);
-                  });
-              } else {
+            ref_Groups
+              .child(item.id)
+              .update({ members: updatedMembers })
+              .then(() => {
                 props.navigation.navigate("GroupChat", {
                   currentId: currentId,
                   groupId: item.id,
                 });
-              }
-            }}
-          >
-            <Text style={styles.groupName}>{item.name}</Text>
-            <Text style={styles.groupDescription}>{item.description}</Text>
-          </TouchableOpacity>
-        )}
-      />
+              })
+              .catch((error) => {
+                console.error("Error adding user to group:", error);
+              });
+          } else {
+            props.navigation.navigate("GroupChat", {
+              currentId: currentId,
+              groupId: item.id,
+            });
+          }
+        }}
+      >
+        <Ionicons name="chatbubble-ellipses" size={25} color="#fff" />
+      </TouchableOpacity>
+    </View>
+  )}
+/>
+
 
       {/* Bouton flottant (icône "+") */}
       <TouchableOpacity
@@ -224,10 +230,16 @@ const styles = StyleSheet.create({
     color: "#000",
   },
   groupItem: {
+    flexDirection: "row",
+    justifyContent: "space-between", // Espacement entre les deux
+  alignItems: "center",
     padding: 15,
     marginVertical: 8,
     borderRadius: 10,
     backgroundColor: "rgba(0, 0, 0, 0.3)",
+  },
+  groupTextContainer: {
+    flex: 1, // Permet au texte de prendre tout l'espace disponible
   },
   groupName: {
     fontSize: 18,
@@ -306,5 +318,10 @@ const styles = StyleSheet.create({
   buttonText: {
     color: "white",
     fontSize: 16,
+  },
+  chatButton: {
+    padding: 5,
+    justifyContent: "center",
+    alignItems: "center",
   },
 });
