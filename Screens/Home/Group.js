@@ -57,21 +57,30 @@ export default function Group(props) {
       alert("Le nom du groupe est requis.");
       return;
     }
-
+  
     const groupId = ref_Groups.push().key;
     const newGroup = {
       id: groupId,
       name: newGroupName,
       description: newGroupDescription || "",
-      members: { [currentId]: true },
+      members: { [currentId]: true }, // Ajoute l'utilisateur qui crée le groupe
     };
-
-    ref_Groups.child(groupId).set(newGroup);
-    setNewGroupName("");
-    setNewGroupDescription("");
-    setModalVisible(false); // Fermer la pop-up
-    alert("Groupe créé avec succès !");
+  
+    ref_Groups
+      .child(groupId)
+      .set(newGroup)
+      .then(() => {
+        setNewGroupName("");
+        setNewGroupDescription("");
+        setModalVisible(false);
+        alert("Groupe créé avec succès !");
+      })
+      .catch((error) => {
+        console.error("Erreur lors de la création du groupe :", error);
+      });
   };
+  
+  
 
   return (
     <ImageBackground
@@ -112,7 +121,7 @@ export default function Group(props) {
         onPress={() =>{
           if (!item.members || !item.members[currentId]) {
             const updatedMembers = { ...item.members, [currentId]: true };
-
+          
             ref_Groups
               .child(item.id)
               .update({ members: updatedMembers })
@@ -121,9 +130,11 @@ export default function Group(props) {
                   currentId: currentId,
                   groupId: item.id,
                 });
+                console.log("Mise à jour réussie :", updatedMembers);
               })
               .catch((error) => {
-                console.error("Error adding user to group:", error);
+                console.error("Erreur lors de l'ajout de l'utilisateur :", error);
+                console.error("Erreur Firebase :", error);
               });
           } else {
             props.navigation.navigate("GroupChat", {
@@ -131,6 +142,7 @@ export default function Group(props) {
               groupId: item.id,
             });
           }
+          
         }}
       >
         <Ionicons name="chatbubble-ellipses" size={25} color="#fff" />
