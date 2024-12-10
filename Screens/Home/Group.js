@@ -6,10 +6,11 @@ import {
   TouchableOpacity,
   FlatList,
   StyleSheet,
+  Modal,
   ImageBackground,
 } from "react-native";
 import Icon from "react-native-vector-icons/MaterialIcons"; 
-import { fonts, layout, colors } from "../../Styles/styles";
+import { fonts, colors } from "../../Styles/styles";
 import firebase from "../../Config";
 
 const database = firebase.database();
@@ -17,6 +18,7 @@ const ref_Groups = database.ref("Groups");
 
 export default function Group(props) {
   const [groups, setGroups] = useState([]);
+  const [modalVisible, setModalVisible] = useState(false);
   const [newGroupName, setNewGroupName] = useState("");
   const [newGroupDescription, setNewGroupDescription] = useState("");
   const currentId = props.route.params.currentId;
@@ -34,10 +36,9 @@ export default function Group(props) {
     return () => ref_Groups.off();
   }, []);
 
-  // Function to create a new group
   const createGroup = () => {
     if (!newGroupName.trim()) {
-      alert("Group name cannot be empty.");
+      alert("Le nom du groupe est requis.");
       return;
     }
 
@@ -52,7 +53,8 @@ export default function Group(props) {
     ref_Groups.child(groupId).set(newGroup);
     setNewGroupName("");
     setNewGroupDescription("");
-    alert("Group created successfully!");
+    setModalVisible(false); // Fermer la pop-up
+    alert("Groupe créé avec succès !");
   };
 
   return (
@@ -60,61 +62,13 @@ export default function Group(props) {
       source={require("../../assets/background.png")}
       style={styles.container}
     >
-      {/* Header */}
-      <Text style={[fonts.title, { marginTop: 60 }]}>Creer un Groupe</Text>
-
-      {/* Create Group */}
-      <View
-        style={[
-          layout.innerContainer,
-          {
-            height: 250,
-            alignItems: "center",
-          },
-        ]}
-      >
-        <View style={styles.inputGroup}>
-          <Icon
-            name="group"
-            size={20}
-            color={colors.buttonColor}
-            style={styles.inputIcon}
-          />
-          <TextInput
-            style={styles.input}
-            placeholder="Nom du groupe"
-            placeholderTextColor={colors.placeholder}
-            value={newGroupName}
-            onChangeText={setNewGroupName}
-          />
-        </View>
-
-        <View style={styles.inputGroup}>
-          <Icon
-            name="description"
-            size={20}
-            color={colors.buttonColor}
-            style={styles.inputIcon}
-          />
-          <TextInput
-            style={styles.input}
-            placeholder="Description (optionelle)"
-            placeholderTextColor={colors.placeholder}
-            value={newGroupDescription}
-            onChangeText={setNewGroupDescription}
-          />
-        </View>
-
-        <TouchableOpacity style={styles.createButton} onPress={createGroup}>
-          <Text style={styles.createButtonText}>Creer</Text>
-        </TouchableOpacity>
-      </View>
+      <Text style={[fonts.title, { marginTop: 60 }]}>Liste des Groupes</Text>
 
       <View style={styles.profileLine}></View>
 
       <Text style={[fonts.title, { marginTop: 20 }]}>Discuter</Text>
 
-      {/* List Groups */}
+      {/* Liste des groupes */}
       <FlatList
         style={styles.groupList}
         data={groups}
@@ -151,6 +105,64 @@ export default function Group(props) {
           </TouchableOpacity>
         )}
       />
+
+      {/* Bouton flottant (icône "+") */}
+      <TouchableOpacity
+        style={styles.floatingButton}
+        onPress={() => setModalVisible(true)}
+      >
+        <Icon name="add" size={28} color="#fff" />
+      </TouchableOpacity>
+
+      {/* Modal (pop-in) */}
+      <Modal
+        visible={modalVisible}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setModalVisible(false)}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <Text style={[fonts.title, { marginBottom: 20 }]}>Créer un Groupe</Text>
+
+            <View style={styles.inputGroup}>
+              <Icon name="group" size={20} color={colors.buttonColor} />
+              <TextInput
+                style={styles.input}
+                placeholder="Nom du groupe"
+                value={newGroupName}
+                onChangeText={setNewGroupName}
+              />
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Icon name="description" size={20} color={colors.buttonColor} />
+              <TextInput
+                style={styles.input}
+                placeholder="Description (optionnelle)"
+                value={newGroupDescription}
+                onChangeText={setNewGroupDescription}
+              />
+            </View>
+
+            <View style={styles.modalButtons}>
+              <TouchableOpacity
+                style={[styles.modalButton, styles.cancelButton]}
+                onPress={() => setModalVisible(false)}
+              >
+                <Text style={styles.buttonText}>Annuler</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.modalButton, styles.confirmButton]}
+                onPress={createGroup}
+              >
+                <Text style={styles.buttonText}>Créer</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </ImageBackground>
   );
 }
@@ -161,39 +173,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "flex-start",
   },
-  createContainer: {
-    backgroundColor: "#FFF3",
-    padding: 15,
-    borderRadius: 10,
-    marginVertical: 20,
-    width: "90%",
-    alignItems: "center",
-  },
-  input: {
-    fontWeight: "bold",
-    backgroundColor: "#0004",
-    fontSize: 20,
-    color: "#fff",
-    width: "75%",
-    height: 50,
-    borderRadius: 10,
-    margin: 5,
-  },
-  createButton: {
-    width: "60%",
-    paddingVertical: 15,
-    borderRadius: 10,
-    marginTop: 20,
-    backgroundColor: colors.buttonColor,
-    alignItems: "center",
-  },
-  createButtonText: {
-    color: "white",
-    fontSize: 16,
-    fontWeight: "bold",
-  },
   groupList: {
-    width: "95%",
+    width: "90%",
     borderRadius: 8,
   },
   groupItem: {
@@ -211,30 +192,73 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#cdcdcd",
   },
-
   profileLine: {
-    width: "85%", // Peut être ajusté pour correspondre à votre design
+    width: "85%",
     height: 2,
-    backgroundColor: "rgba(0, 0, 0, 0.3)", // Utilisez la couleur que vous préférez
+    backgroundColor: "rgba(0, 0, 0, 0.3)",
+  },
+  floatingButton: {
+    position: "absolute",
+    bottom: 20,
+    right: 20,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: colors.buttonColor,
+    alignItems: "center",
+    justifyContent: "center",
+    shadowColor: "#000",
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+  },
+  modalContent: {
+    width: "90%",
+    padding: 20,
+    borderRadius: 10,
+    backgroundColor: "white",
     alignItems: "center",
   },
   inputGroup: {
     flexDirection: "row",
     alignItems: "center",
-    borderColor: colors.buttonColor,
-    borderWidth: 2,
-    borderRadius: 10,
-    padding: 5,
-    marginVertical: 5,
+    marginVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.buttonColor,
     width: "100%",
-    backgroundColor: colors.inputBackground,
-  },
-  inputIcon: {
-    marginRight: 10,
   },
   input: {
     flex: 1,
+    padding: 10,
     fontSize: 16,
-    color: colors.text,
+  },
+  modalButtons: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: 20,
+    width: "100%",
+  },
+  modalButton: {
+    flex: 1,
+    marginHorizontal: 10,
+    padding: 15,
+    borderRadius: 5,
+    alignItems: "center",
+  },
+  cancelButton: {
+    backgroundColor: "#ccc",
+  },
+  confirmButton: {
+    backgroundColor: colors.buttonColor,
+  },
+  buttonText: {
+    color: "white",
+    fontSize: 16,
   },
 });
