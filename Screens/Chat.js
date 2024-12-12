@@ -8,7 +8,7 @@ import {
   TouchableHighlight,
   Image,
 } from "react-native";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { fonts, layout, colors } from "../Styles/styles";
 import firebase from "../Config";
 
@@ -34,6 +34,12 @@ export default function Chat(props) {
 
   const [Msg, setMsg] = useState("");
   const [data, setdata] = useState([]);
+  const flatListRef = useRef(null);
+
+useEffect(() => {
+  flatListRef.current?.scrollToEnd({ animated: true });
+}, [data]);
+
 
   useEffect(() => {
     ref_unediscussion.on("value", (snapshot) => {
@@ -59,11 +65,11 @@ export default function Chat(props) {
   }, []);
 
   const extractDate = (timestamp) => {
-    return timestamp.split(" ")[0]; // Récupère uniquement "jour/mois/année"
+    return timestamp.split(" ")[0].trim(); // "01/12/2024"
   };
 
   const extractTime = (timestamp) => {
-    return timestamp.split(" ")[1]; // Récupère uniquement l'heure "hh:mm:ss"
+    return timestamp.split(" ")[1]; // "1:32:10 PM"
   };
 
   const handleSend = () => {
@@ -93,6 +99,7 @@ export default function Chat(props) {
   }, []);
 
   return (
+    
     <View style={styles.mainContainer}>
       <ImageBackground
         source={require("../assets/background.png")}
@@ -103,6 +110,7 @@ export default function Chat(props) {
         </Text>
 
         <FlatList
+        ref={flatListRef}
           style={styles.messagesContainer}
           data={data}
           renderItem={({ item, index }) => {
@@ -115,24 +123,34 @@ export default function Chat(props) {
               : secondUser.uriImage;
 
             const showProfileImage =
-              index === 0 || item.sender !== data[index - 1].sender;
+              index === 0 || item.sender !== data[index - 1]?.sender;
 
-            const currentMessageDate = extractDate(item.time);
+            // Normalisation des dates
+            const normalizeDate = (timestamp) => {
+              return extractDate(timestamp).replace(/,$/, "").trim(); // Supprime les virgules finales
+            };
+
+            const currentMessageDate = normalizeDate(item.time);
             const previousMessageDate =
-              index > 0 ? extractDate(data[index - 1].time) : null;
+              index > 0 ? normalizeDate(data[index - 1]?.time) : null;
+
+            // Condition corrigée pour le séparateur de date
+            const showDateSeparator =
+              index === 0 ||
+              (previousMessageDate &&
+                currentMessageDate !== previousMessageDate);
 
             return (
               <>
-                {index === 0 || currentMessageDate !== previousMessageDate ? (
+                {showDateSeparator && (
                   <View style={styles.dateSeparatorContainer}>
                     <Text style={styles.dateSeparatorText}>
                       {currentMessageDate}
                     </Text>
                     <View style={styles.line} />
                   </View>
-                ) : null}
+                )}
 
-                
                 <View
                   style={[
                     styles.messageContainer,
@@ -141,7 +159,7 @@ export default function Chat(props) {
                     },
                   ]}
                 >
-                  {showProfileImage && profileImage ? (
+                  {(showProfileImage && profileImage) ||showDateSeparator ? (
                     <Image
                       source={{ uri: profileImage }}
                       style={styles.profileImage}
@@ -167,9 +185,11 @@ export default function Chat(props) {
             isSecondUserTyping && (
               <Text style={styles.typingIndicator}>
                 {secondUser.nom} is typing...
+                
               </Text>
             )
           }
+          contentContainerStyle={{ paddingBottom: 30 }}
         />
 
         <View style={styles.inputContainer}>
@@ -197,9 +217,7 @@ export default function Chat(props) {
 }
 
 const styles = StyleSheet.create({
-  mainContainer: {
-    flex: 1,
-  },
+  mainContainer: { flex: 1 },
   container: {
     flex: 1,
     justifyContent: "flex-start",
@@ -213,10 +231,12 @@ const styles = StyleSheet.create({
     color: "#ffffff",
   },
   typingIndicator: {
+    height: 20,
     fontSize: 14,
     color: "#ccc",
     fontStyle: "italic",
-    marginBottom: 10,
+    marginBottom: 20,
+    marginLeft: 20
   },
   messagesContainer: {
     backgroundColor: "rgba(0, 0, 0, 0.4)",
@@ -225,6 +245,7 @@ const styles = StyleSheet.create({
     marginVertical: 20,
     padding: 5,
     paddingTop: 20,
+    paddingBottom: 20,
   },
   messageContainer: {
     flexDirection: "colomn",
