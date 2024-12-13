@@ -11,6 +11,8 @@ import {
 import React, { useState, useEffect, useRef } from "react";
 import { fonts, layout, colors } from "../Styles/styles";
 import firebase from "../Config";
+import { supabase } from "../Config";
+import * as ImagePicker from "expo-image-picker";
 
 const database = firebase.database();
 const ref_lesdiscussions = database.ref("lesdiscussions");
@@ -96,6 +98,62 @@ export default function Chat(props) {
     setMsg("");
   };
 
+  const handleSendImage = async () => {
+    try {
+      // Ouvrir la bibliothèque pour choisir une image
+      let pickerResult = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 1,
+      });
+  
+      if (!pickerResult.canceled) {
+        const selectedImageUri = pickerResult.assets[0].uri;
+  
+        // Téléverser l'image sur Supabase
+        const response = await fetch(selectedImageUri);
+        const blob = await response.blob();
+        const arraybuffer = await new Response(blob).arrayBuffer();
+  
+        // Générez un chemin unique une seule fois
+        const filePath = `${iddisc}/${new Date().getTime()}.jpg`;
+  
+        // Upload de l'image
+        const { error } = await supabase.storage
+          .from("ChatImages")
+          .upload(filePath, arraybuffer, { upsert: false });
+  
+        if (error) {
+          console.error("Erreur d'upload :", error.message);
+          return;
+        }
+  
+        console.log("Upload réussi :", filePath);
+  
+        // Récupérer l'URL publique de l'image
+        const { data } = supabase.storage.from("ChatImages").getPublicUrl(filePath);
+        const imageUrl = data.publicUrl;
+  
+        // Envoyer le message avec l'URL de l'image
+        const key = ref_unediscussion.push().key;
+        const ref_unmsg = ref_unediscussion.child(key);
+        await ref_unmsg.set({
+          body: imageUrl,
+          type: "image", // Indique que le message est une image
+          time: new Date().toLocaleString(),
+          sender: currentUser.id,
+          receiver: secondUser.id,
+        });
+  
+        console.log("Image envoyée avec succès :", imageUrl);
+      }
+    } catch (error) {
+      console.error("Erreur lors de l'envoi de l'image :", error);
+    }
+  };
+  
+
   useEffect(() => {
     const secondUserTypingListener = ref_secondIsTyping.on(
       "value",
@@ -127,30 +185,48 @@ export default function Chat(props) {
             const isCurrentUser = item.sender === currentUser.id;
             const color = isCurrentUser ? "#FFF" : "#444";
             const textColor = isCurrentUser ? colors.buttonColor : "#fff";
-          
+
+            if (item.type === "image") {
+              // Affichage d'une image
+              return (
+                <View
+                  style={[
+                    styles.messageContainer,
+                    { flexDirection: isCurrentUser ? "row-reverse" : "row" },
+                  ]}
+                >
+                  <Image
+                    source={{ uri: item.body }}
+                    style={styles.chatImage} // Ajoutez un style pour les images
+                  />
+                </View>
+              );
+            }
+
             const profileImage = isCurrentUser
               ? currentUser.uriImage
               : secondUser.uriImage;
-          
+
             const showProfileImage =
               index === 0 || item.sender !== data[index - 1]?.sender;
-          
+
             // Normalisation des dates
             const normalizeDate = (timestamp) => {
               return extractDate(timestamp).replace(/,$/, "").trim(); // Supprime les virgules finales
             };
-          
+
             const currentMessageDate = normalizeDate(item.time);
             const previousMessageDate =
               index > 0 ? normalizeDate(data[index - 1]?.time) : null;
-          
+
             // Condition corrigée pour le séparateur de date
             const showDateSeparator =
               index === 0 ||
-              (previousMessageDate && currentMessageDate !== previousMessageDate);
-          
+              (previousMessageDate &&
+                currentMessageDate !== previousMessageDate);
+
             const isLastMessage = index === data.length - 1; // Vérifie si c'est le dernier message
-          
+
             return (
               <>
                 {showDateSeparator && (
@@ -161,7 +237,7 @@ export default function Chat(props) {
                     <View style={styles.line} />
                   </View>
                 )}
-          
+
                 <View
                   style={[
                     styles.messageContainer,
@@ -189,13 +265,14 @@ export default function Chat(props) {
                     </View>
                   </View>
                 </View>
-                {isLastMessage && isCurrentUser && item.seen && ( // Affiche seulement pour le dernier message vu
+                {isLastMessage &&
+                  isCurrentUser &&
+                  item.seen && ( // Affiche seulement pour le dernier message vu
                     <Text style={styles.seenStatus}>· Seen</Text>
                   )}
               </>
             );
           }}
-          
           ListFooterComponent={
             isSecondUserTyping && (
               <Text style={styles.typingIndicator}>
@@ -207,6 +284,12 @@ export default function Chat(props) {
         />
 
         <View style={styles.inputContainer}>
+          <TouchableHighlight
+            style={styles.imageButton}
+            onPress={handleSendImage}
+          >
+            <Text style={styles.imageButtonText}>📷</Text>
+          </TouchableHighlight>
           <TextInput
             onChangeText={(text) => setMsg(text)}
             onFocus={() => {
@@ -249,13 +332,20 @@ const styles = StyleSheet.create({
     color: "#aaa",
     fontStyle: "italic",
     alignSelf: "flex-end",
-    marginRight : 50
+    marginRight: 50,
   },
   headerText: {
     marginTop: 50,
     fontSize: 22,
     fontWeight: "bold",
     color: "#ffffff",
+  },
+  chatImage: {
+    width: 150,
+    height: 150,
+    borderRadius: 10,
+    marginLeft:45,
+    marginRight:45
   },
   typingIndicator: {
     height: 20,
