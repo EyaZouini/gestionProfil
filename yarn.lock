@@ -3763,6 +3763,11 @@ expo-constants@~17.0.0, expo-constants@~17.0.3:
     "@expo/config" "~10.0.4"
     "@expo/env" "~0.4.0"
 
+expo-document-picker@^13.0.1:
+  version "13.0.1"
+  resolved "https://registry.npmjs.org/expo-document-picker/-/expo-document-picker-13.0.1.tgz"
+  integrity sha512-M3O3SDqubsRbVyY+Xu6V45K0/G1S1IqEdmVAnPkOiUU2eIEFfF5oP4KON4CsvEhO9IIunnpRr/oq9NQxb3SrEA==
+
 expo-file-system@~18.0.3:
   version "18.0.3"
   resolved "https://registry.npmjs.org/expo-file-system/-/expo-file-system-18.0.3.tgz"
@@ -3793,6 +3798,11 @@ expo-keep-awake@~14.0.1:
   version "14.0.1"
   resolved "https://registry.npmjs.org/expo-keep-awake/-/expo-keep-awake-14.0.1.tgz"
   integrity sha512-c5mGCAIk2YM+Vsdy90BlEJ4ZX+KG5Au9EkJUIxXWlpnuKmDAJ3N+5nEZ7EUO1ZTheqoSBeAo4jJ8rTWPU+JXdw==
+
+expo-location@~18.0.4:
+  version "18.0.4"
+  resolved "https://registry.npmjs.org/expo-location/-/expo-location-18.0.4.tgz"
+  integrity sha512-OrZTxRpfi4bCJxjW186wt3kfoe0FHwXceE6dXdbxvjxnwMP9cbKeqY6Y2M1bVwboq7PI2eV/e1rOaGq+F+fZyw==
 
 expo-modules-autolinking@2.0.2:
   version "2.0.2"

@@ -13,6 +13,7 @@ import { fonts, layout, colors } from "../Styles/styles";
 import firebase from "../Config";
 import { supabase } from "../Config";
 import * as ImagePicker from "expo-image-picker";
+import * as Location from "expo-location";
 
 const database = firebase.database();
 const ref_lesdiscussions = database.ref("lesdiscussions");
@@ -98,6 +99,39 @@ export default function Chat(props) {
     setMsg("");
   };
 
+  const handleSendLocation = async () => {
+    try {
+      // Request permission to access location
+      let { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== "granted") {
+        alert("Permission to access location was denied");
+        return;
+      }
+
+      // Get the user's current position
+      let location = await Location.getCurrentPositionAsync({});
+      const { latitude, longitude } = location.coords;
+
+      // Create the Google Maps link
+      const mapUrl = `https://www.google.com/maps?q=${latitude},${longitude}`;
+
+      // Send the location as a message
+      const key = ref_unediscussion.push().key;
+      const ref_unmsg = ref_unediscussion.child(key);
+      ref_unmsg.set({
+        body: `Location: ${mapUrl}`,
+        type: "location", // Custom type for location messages
+        time: new Date().toLocaleString(),
+        sender: currentUser.id,
+        receiver: secondUser.id,
+      });
+
+      console.log("Location sent:", mapUrl);
+    } catch (error) {
+      console.error("Error sending location:", error);
+    }
+  };
+
   const handleSendImage = async () => {
     try {
       // Ouvrir la bibliothèque pour choisir une image
@@ -107,34 +141,36 @@ export default function Chat(props) {
         aspect: [1, 1],
         quality: 1,
       });
-  
+
       if (!pickerResult.canceled) {
         const selectedImageUri = pickerResult.assets[0].uri;
-  
+
         // Téléverser l'image sur Supabase
         const response = await fetch(selectedImageUri);
         const blob = await response.blob();
         const arraybuffer = await new Response(blob).arrayBuffer();
-  
+
         // Générez un chemin unique une seule fois
         const filePath = `${iddisc}/${new Date().getTime()}.jpg`;
-  
+
         // Upload de l'image
         const { error } = await supabase.storage
           .from("ChatImages")
           .upload(filePath, arraybuffer, { upsert: false });
-  
+
         if (error) {
           console.error("Erreur d'upload :", error.message);
           return;
         }
-  
+
         console.log("Upload réussi :", filePath);
-  
+
         // Récupérer l'URL publique de l'image
-        const { data } = supabase.storage.from("ChatImages").getPublicUrl(filePath);
+        const { data } = supabase.storage
+          .from("ChatImages")
+          .getPublicUrl(filePath);
         const imageUrl = data.publicUrl;
-  
+
         // Envoyer le message avec l'URL de l'image
         const key = ref_unediscussion.push().key;
         const ref_unmsg = ref_unediscussion.child(key);
@@ -145,14 +181,13 @@ export default function Chat(props) {
           sender: currentUser.id,
           receiver: secondUser.id,
         });
-  
+
         console.log("Image envoyée avec succès :", imageUrl);
       }
     } catch (error) {
       console.error("Erreur lors de l'envoi de l'image :", error);
     }
   };
-  
 
   useEffect(() => {
     const secondUserTypingListener = ref_secondIsTyping.on(
@@ -286,6 +321,13 @@ export default function Chat(props) {
         <View style={styles.inputContainer}>
           <TouchableHighlight
             style={styles.imageButton}
+            onPress={handleSendLocation}
+          >
+            <Text style={styles.imageButtonText}>📍</Text>
+          </TouchableHighlight>
+
+          <TouchableHighlight
+            style={styles.imageButton}
             onPress={handleSendImage}
           >
             <Text style={styles.imageButtonText}>📷</Text>
@@ -344,8 +386,8 @@ const styles = StyleSheet.create({
     width: 150,
     height: 150,
     borderRadius: 10,
-    marginLeft:45,
-    marginRight:45
+    marginLeft: 45,
+    marginRight: 45,
   },
   typingIndicator: {
     height: 20,
@@ -398,6 +440,19 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 20,
     marginHorizontal: 10,
+  },
+  imageButton: {
+    backgroundColor: "rgba(0, 0, 0, 0.4)",
+    borderRadius: 10,
+    height: 50,
+    width: 40,
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 5,
+  },
+  imageButtonText: {
+    color: "#fff",
+    fontSize: 24,
   },
   textinput: {
     flex: 1,
