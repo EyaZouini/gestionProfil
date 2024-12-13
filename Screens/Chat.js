@@ -422,7 +422,7 @@ const styles = StyleSheet.create({
     marginLeft: 20,
   },
   messagesContainer: {
-    backgroundColor: "rgba(0, 0, 0, 0.4)",
+    backgroundColor: "rgba(0, 0, 0, 0.2)",
     width: "95%",
     borderRadius: 10,
     marginVertical: 10,

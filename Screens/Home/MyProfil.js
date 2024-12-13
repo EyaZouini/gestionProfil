@@ -224,9 +224,11 @@ export default function MyProfil(props) {
         style={[
           layout.innerContainer,
           {
-            height: "75%",
+            backgroundColor:"rgba(0, 0, 0, 0.2)",
+            height: "77%",
+            width:"93%",
             position: "absolute",
-            bottom: 30,
+            bottom: 12,
             alignItems: "center",
           },
         ]}
@@ -325,7 +327,7 @@ export default function MyProfil(props) {
           }
           disabled={!isModified} // Désactive le bouton si non modifié
         >
-          <Text style={fonts.buttonText}>Save</Text>
+          <Text style={fonts.buttonText}>Enregistrer</Text>
         </TouchableHighlight>
       </View>
     </ImageBackground>
@@ -353,8 +355,8 @@ const styles = StyleSheet.create({
   },
 
   profileImage: {
-    width: 150,
-    height: 150,
+    width: 170,
+    height: 170,
     borderRadius: 100,
     borderWidth: 2,
     borderColor: colors.buttonColor,
@@ -387,12 +389,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   saveButton: {
-    width: "60%",
+    width: "50%",
     paddingVertical: 15,
     borderRadius: 10,
     alignItems: "center",
-    marginTop: 115,
-    marginBottom: 20,
+    marginTop: 110,
   },
 
   inputGroup: {
@@ -403,7 +404,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     padding: 5,
     marginVertical: 5,
-    width: "100%",
+    width: "90%",
     backgroundColor: colors.inputBackground,
   },
   inputIcon: {
