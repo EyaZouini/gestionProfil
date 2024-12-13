@@ -35,17 +35,17 @@ export default function Chat(props) {
   const [Msg, setMsg] = useState("");
   const [data, setdata] = useState([]);
   const flatListRef = useRef(null);
+  const [lastSeenMessage, setLastSeenMessage] = useState(null);
 
-useEffect(() => {
-  flatListRef.current?.scrollToEnd({ animated: true });
-}, [data]);
-
+  useEffect(() => {
+    flatListRef.current?.scrollToEnd({ animated: true });
+  }, [data]);
 
   useEffect(() => {
     ref_unediscussion.on("value", (snapshot) => {
       let d = [];
       snapshot.forEach((childSnapshot) => {
-        const message = childSnapshot.val();
+        const message = { key: childSnapshot.key, ...childSnapshot.val() };
 
         if (
           message.body &&
@@ -56,9 +56,20 @@ useEffect(() => {
           d.push(message);
         }
       });
-      setdata(d);
-    });
 
+      setdata(d);
+
+      // Mise à jour de l'état "vu" pour le dernier message
+      const lastMessage = d[d.length - 1];
+      if (
+        lastMessage &&
+        lastMessage.receiver === currentUser.id &&
+        !lastMessage.seen
+      ) {
+        ref_unediscussion.child(lastMessage.key).update({ seen: true });
+        setLastSeenMessage(lastMessage.key);
+      }
+    });
     return () => {
       ref_unediscussion.off();
     };
@@ -99,7 +110,6 @@ useEffect(() => {
   }, []);
 
   return (
-    
     <View style={styles.mainContainer}>
       <ImageBackground
         source={require("../assets/background.png")}
@@ -110,36 +120,37 @@ useEffect(() => {
         </Text>
 
         <FlatList
-        ref={flatListRef}
+          ref={flatListRef}
           style={styles.messagesContainer}
           data={data}
           renderItem={({ item, index }) => {
             const isCurrentUser = item.sender === currentUser.id;
             const color = isCurrentUser ? "#FFF" : "#444";
             const textColor = isCurrentUser ? colors.buttonColor : "#fff";
-
+          
             const profileImage = isCurrentUser
               ? currentUser.uriImage
               : secondUser.uriImage;
-
+          
             const showProfileImage =
               index === 0 || item.sender !== data[index - 1]?.sender;
-
+          
             // Normalisation des dates
             const normalizeDate = (timestamp) => {
               return extractDate(timestamp).replace(/,$/, "").trim(); // Supprime les virgules finales
             };
-
+          
             const currentMessageDate = normalizeDate(item.time);
             const previousMessageDate =
               index > 0 ? normalizeDate(data[index - 1]?.time) : null;
-
+          
             // Condition corrigée pour le séparateur de date
             const showDateSeparator =
               index === 0 ||
-              (previousMessageDate &&
-                currentMessageDate !== previousMessageDate);
-
+              (previousMessageDate && currentMessageDate !== previousMessageDate);
+          
+            const isLastMessage = index === data.length - 1; // Vérifie si c'est le dernier message
+          
             return (
               <>
                 {showDateSeparator && (
@@ -150,7 +161,7 @@ useEffect(() => {
                     <View style={styles.line} />
                   </View>
                 )}
-
+          
                 <View
                   style={[
                     styles.messageContainer,
@@ -159,7 +170,7 @@ useEffect(() => {
                     },
                   ]}
                 >
-                  {(showProfileImage && profileImage) ||showDateSeparator ? (
+                  {(showProfileImage && profileImage) || showDateSeparator ? (
                     <Image
                       source={{ uri: profileImage }}
                       style={styles.profileImage}
@@ -178,14 +189,17 @@ useEffect(() => {
                     </View>
                   </View>
                 </View>
+                {isLastMessage && isCurrentUser && item.seen && ( // Affiche seulement pour le dernier message vu
+                    <Text style={styles.seenStatus}>· Seen</Text>
+                  )}
               </>
             );
           }}
+          
           ListFooterComponent={
             isSecondUserTyping && (
               <Text style={styles.typingIndicator}>
                 {secondUser.nom} is typing...
-                
               </Text>
             )
           }
@@ -230,6 +244,13 @@ const styles = StyleSheet.create({
     alignItems: "center",
     padding: 5,
   },
+  seenStatus: {
+    fontSize: 14,
+    color: "#aaa",
+    fontStyle: "italic",
+    alignSelf: "flex-end",
+    marginRight : 50
+  },
   headerText: {
     marginTop: 50,
     fontSize: 22,
@@ -242,7 +263,7 @@ const styles = StyleSheet.create({
     color: "#ccc",
     fontStyle: "italic",
     marginBottom: 20,
-    marginLeft: 20
+    marginLeft: 20,
   },
   messagesContainer: {
     backgroundColor: "rgba(0, 0, 0, 0.4)",
