@@ -195,8 +195,14 @@ useEffect(() => {
         <View style={styles.inputContainer}>
           <TextInput
             onChangeText={(text) => setMsg(text)}
-            onFocus={() => ref_currentIsTyping.set(true)}
-            onBlur={() => ref_currentIsTyping.set(false)}
+            onFocus={() => {
+              console.log("User started typing");
+              ref_currentIsTyping.set(true);
+            }}
+            onBlur={() => {
+              console.log("User stopped typing");
+              ref_currentIsTyping.set(false);
+            }}
             value={Msg}
             placeholderTextColor="#ccc"
             placeholder="Write a message"
