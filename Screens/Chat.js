@@ -14,6 +14,7 @@ import firebase from "../Config";
 import { supabase } from "../Config";
 import * as ImagePicker from "expo-image-picker";
 import * as Location from "expo-location";
+import Icon from "react-native-vector-icons/MaterialIcons";
 
 const database = firebase.database();
 const ref_lesdiscussions = database.ref("lesdiscussions");
@@ -209,7 +210,7 @@ export default function Chat(props) {
         style={styles.container}
       >
         <Text style={styles.headerText}>
-          {secondUser.pseudo} : {secondUser.nom}
+          {secondUser.pseudo}
         </Text>
 
         <FlatList
@@ -350,10 +351,9 @@ export default function Chat(props) {
           <TouchableHighlight
             activeOpacity={0.5}
             underlayColor="#555"
-            style={styles.sendButton}
             onPress={handleSend}
           >
-            <Text style={styles.sendButtonText}>Send</Text>
+            <Icon name="send" size={30} color="fff" />
           </TouchableHighlight>
         </View>
       </ImageBackground>
@@ -401,10 +401,10 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(0, 0, 0, 0.4)",
     width: "95%",
     borderRadius: 10,
-    marginVertical: 20,
+    marginVertical: 10,
     padding: 5,
     paddingTop: 20,
-    paddingBottom: 20,
+    paddingBottom: 5,
   },
   messageContainer: {
     flexDirection: "colomn",
@@ -464,14 +464,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 15,
     borderRadius: 10,
     marginRight: 10,
-  },
-  sendButton: {
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: colors.buttonColor,
-    borderRadius: 10,
-    height: 50,
-    width: "30%",
   },
   dateSeparatorContainer: {
     alignItems: "center",

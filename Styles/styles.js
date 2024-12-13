@@ -4,7 +4,7 @@ export const colors = {
   primaryBackground: "#0005",
   textColor: "white",
   inputBackground: "white",
-  buttonColor: "#83b9cd",
+  buttonColor: "#8db6ed",
 };
 
 export const fonts = {
