@@ -15,6 +15,7 @@ import { supabase } from "../Config";
 import * as ImagePicker from "expo-image-picker";
 import * as Location from "expo-location";
 import Icon from "react-native-vector-icons/MaterialIcons";
+import MapView, { Marker } from 'react-native-maps';
 
 const database = firebase.database();
 const ref_lesdiscussions = database.ref("lesdiscussions");
@@ -235,6 +236,29 @@ export default function Chat(props) {
                     source={{ uri: item.body }}
                     style={styles.chatImage} // Ajoutez un style pour les images
                   />
+                </View>
+              );
+            }
+
+            if (item.type === "location") {
+              const mapUrl = item.body;
+              const match = mapUrl.match(/q=(-?\d+\.\d+),(-?\d+\.\d+)/);
+              const latitude = parseFloat(match[1]);
+              const longitude = parseFloat(match[2]);
+            
+              return (
+                <View style={[styles.messageContainer, { flexDirection: isCurrentUser ? "row-reverse" : "row" , marginRight:45, marginLeft:45}]}>
+                  <MapView
+                    style={{ width: 200, height: 200 }}
+                    initialRegion={{
+                      latitude,
+                      longitude,
+                      latitudeDelta: 0.0922,
+                      longitudeDelta: 0.0421,
+                    }}
+                  >
+                    <Marker coordinate={{ latitude, longitude }} />
+                  </MapView>
                 </View>
               );
             }
