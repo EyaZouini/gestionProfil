@@ -11,6 +11,7 @@ import {
 import React, { useState, useEffect, useRef } from "react";
 import firebase from "../Config";
 import { colors, layout, fonts } from "../Styles/styles";
+import Icon from "react-native-vector-icons/MaterialIcons";
 
 const database = firebase.database();
 const ref_groupChats = database.ref("groupChats");
@@ -119,51 +120,49 @@ export default function GroupChat(props) {
             const previousMessageDate =
               index > 0 ? extractDate(data[index - 1]?.time) : null;
 
-              return (
-                <>
-                  {index === 0 || currentMessageDate !== previousMessageDate ? (
-                    <View style={styles.dateSeparatorContainer}>
-                      <Text style={styles.dateSeparatorText}>
-                        {currentMessageDate}
+            return (
+              <>
+                {index === 0 || currentMessageDate !== previousMessageDate ? (
+                  <View style={styles.dateSeparatorContainer}>
+                    <Text style={styles.dateSeparatorText}>
+                      {currentMessageDate}
+                    </Text>
+                    <View style={styles.line} />
+                  </View>
+                ) : null}
+                {showProfileImage && (
+                  <Text style={styles.senderName}>{item.senderName}</Text>
+                )}
+                <View
+                  style={[
+                    styles.messageContainer,
+                    {
+                      flexDirection: isCurrentUser ? "row-reverse" : "row",
+                    },
+                  ]}
+                >
+                  {showProfileImage && item.senderImage ? (
+                    <Image
+                      source={{ uri: item.senderImage }}
+                      style={styles.profileImage}
+                    />
+                  ) : (
+                    <View style={styles.profileImage} />
+                  )}
+                  <View style={[styles.message, { backgroundColor: color }]}>
+                    <View style={styles.messageContent}>
+                      <Text style={[styles.messageText, { color: textColor }]}>
+                        {item.body}
                       </Text>
-                      <View style={styles.line} />
-                    </View>
-                  ) : null}
-                    {showProfileImage && (
-                      <Text style={styles.senderName}>
-                        {item.senderName}
+                      <Text style={styles.messageTime}>
+                        {extractTime(item.time)}
                       </Text>
-                    )}
-                  <View
-                    style={[
-                      styles.messageContainer,
-                      {
-                        flexDirection: isCurrentUser ? "row-reverse" : "row",
-                      },
-                    ]}
-                  >
-                    {showProfileImage && item.senderImage ? (
-                      <Image
-                        source={{ uri: item.senderImage }}
-                        style={styles.profileImage}
-                      />
-                    ) : (
-                      <View style={styles.profileImage} />
-                    )}
-                    <View style={[styles.message, { backgroundColor: color }]}>
-                      <View style={styles.messageContent}>
-                        <Text style={[styles.messageText, { color: textColor }]}>
-                          {item.body}
-                        </Text>
-                        <Text style={styles.messageTime}>
-                          {extractTime(item.time)}
-                        </Text>
-                      </View>
                     </View>
                   </View>
-                </>
-              );
-            }}
+                </View>
+              </>
+            );
+          }}
         />
         <View style={styles.inputContainer}>
           <TextInput
@@ -176,10 +175,9 @@ export default function GroupChat(props) {
           <TouchableHighlight
             activeOpacity={0.5}
             underlayColor="#555"
-            style={styles.sendButton}
             onPress={sendMessage}
           >
-            <Text style={styles.sendButtonText}>Send</Text>
+            <Icon name="send" size={30} color="fff" />
           </TouchableHighlight>
         </View>
       </ImageBackground>
@@ -296,8 +294,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     marginBottom: 5,
     textAlign: "right",
-    marginRight:50,
-    color : "#aaa"
+    marginRight: 50,
+    color: "#aaa",
   },
-  
 });

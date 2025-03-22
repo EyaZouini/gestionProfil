@@ -15,6 +15,7 @@ import firebase from "../../Config";
 import { fonts, layout, colors } from "../../Styles/styles";
 import { supabase } from "../../Config";
 import Icon from "react-native-vector-icons/MaterialIcons"; // Import des icônes
+import AsyncStorage from "@react-native-async-storage/async-storage";
 const database = firebase.database();
 
 export default function MyProfil(props) {
@@ -192,26 +193,30 @@ export default function MyProfil(props) {
         ]}
       >
         <View style={{ flexDirection: "row", alignItems: "center" }}>
-    
           <Icon
             name="person"
             size={30}
             color="#fff"
             style={{ marginRight: 10 }}
           />
-    
+
           <Text style={fonts.title}>Mon Profil</Text>
         </View>
 
         <TouchableOpacity
           onPress={async () => {
             try {
-              // Log the user out
-              await firebase.auth().signOut();
-              console.log("User logged out");
+              // Supprimer les informations mémorisées
+              await AsyncStorage.removeItem("email");
+              await AsyncStorage.removeItem("password");
 
+              // Déconnexion de Firebase
+              await firebase.auth().signOut();
+              console.log("Utilisateur déconnecté et données effacées.");
+
+              // Redirection vers la page d'authentification
             } catch (error) {
-              console.error("Error logging out:", error);
+              console.error("Erreur lors de la déconnexion :", error);
             }
           }}
         >
@@ -224,9 +229,9 @@ export default function MyProfil(props) {
         style={[
           layout.innerContainer,
           {
-            backgroundColor:"rgba(0, 0, 0, 0.2)",
+            backgroundColor: "rgba(0, 0, 0, 0.2)",
             height: "77%",
-            width:"93%",
+            width: "93%",
             position: "absolute",
             bottom: 12,
             alignItems: "center",
@@ -242,13 +247,13 @@ export default function MyProfil(props) {
             }
             style={styles.profileImage}
           />
-      
+
           <TouchableOpacity onPress={pickImage}>
             <View style={styles.editIcon}>
               <Icon name="edit" size={20} color="#fff" />
             </View>
           </TouchableOpacity>
-        
+
           <TouchableOpacity onPress={takePhoto}>
             <View style={styles.captureButton}>
               <Icon name="camera-alt" size={20} color="#fff" />

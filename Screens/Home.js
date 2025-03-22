@@ -22,6 +22,22 @@ export default function Home(props) {
       }}
     >
       <Tab.Screen
+        name="MyProfil"
+        component={MyProfil}
+        initialParams={{ currentId: currentId }}
+        options={{
+          tabBarLabel: "Mon Profil", // Label de l'onglet
+          tabBarIcon: ({ color }) => (
+            <MaterialCommunityIcons
+              name="account" // Icône représentant un utilisateur
+              color={color}
+              size={26}
+            />
+          ),
+        }}
+      />
+
+      <Tab.Screen
         name="ListProfil"
         component={ListProfil}
         initialParams={{ currentId: currentId }}
@@ -45,22 +61,6 @@ export default function Home(props) {
           tabBarIcon: ({ color }) => (
             <MaterialCommunityIcons
               name="account-group"
-              color={color}
-              size={26}
-            />
-          ),
-        }}
-      />
-
-      <Tab.Screen
-        name="MyProfil"
-        component={MyProfil}
-        initialParams={{ currentId: currentId }}
-        options={{
-          tabBarLabel: "Mon Profil", // Label de l'onglet
-          tabBarIcon: ({ color }) => (
-            <MaterialCommunityIcons
-              name="account" // Icône représentant un utilisateur
               color={color}
               size={26}
             />

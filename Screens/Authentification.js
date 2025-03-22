@@ -26,7 +26,6 @@ export default function Authentification({ navigation }) {
           .signInWithEmailAndPassword(savedEmail, savedPassword)
           .then(() => {
             console.log("Connexion automatique réussie.");
-            navigation.replace("Home"); // Redirige vers la page principale
           })
           .catch(() => {
             // Effacer les données si la connexion échoue
@@ -50,7 +49,6 @@ export default function Authentification({ navigation }) {
             await AsyncStorage.setItem("email", email);
             await AsyncStorage.setItem("password", pwd);
           }
-          navigation.replace("Home"); // Redirige vers la page principale
         })
         .catch((error) => alert(error.message));
     } else {
